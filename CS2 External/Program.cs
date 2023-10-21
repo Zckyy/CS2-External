@@ -103,7 +103,7 @@ namespace CS2EXTERNAL
                 {
                     // aim at first entity in enemy team list
 
-                    var angles = CalculateAngles(localPlayer.origin, Vector3.Subtract(enemyTeam[0].origin, offsetVector));
+                    var angles = ClampAngles(CalculateAngles(localPlayer.origin, Vector3.Subtract(enemyTeam[0].origin, offsetVector)));
                     AimAt(angles); // aim at the angles
                 }
             }
@@ -113,6 +113,26 @@ namespace CS2EXTERNAL
         {
             swed.WriteFloat(client, offsets.ViewAngle, angles.Y); // Pitch - Y as before x this time.
             swed.WriteFloat(client, offsets.ViewAngle + 0x4, angles.X); // Yaw -  A float is 4 bytes so we add 4 to the address to get Yaw
+        }
+
+        Vector3 ClampAngles(Vector3 angles)
+        {
+            while (angles.X > 180.0f)
+                angles.X -= 360.0f;
+
+            while (angles.X < -180.0f)
+                angles.X += 360.0f;
+
+            while (angles.Y > 89.0f)
+                angles.Y -= 360.0f;
+
+            while (angles.Y < -89.0f)
+                angles.Y += 360.0f;
+
+            if (angles.Z != 0.0f)
+                angles.Z = 0.0f;
+
+            return angles;
         }
 
         Vector3 CalculateAngles(Vector3 from, Vector3 destination)
