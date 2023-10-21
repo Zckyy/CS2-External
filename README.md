@@ -1,6 +1,6 @@
 <br/>
 <p align="center">
-  <a href="https://github.com/Zckyy/https://github.com/Zckyy/CS2-External">
+  <a href="https://github.com/Zckyy/CS2-External">
     <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/Counter-Strike_2_logo.svg" alt="Logo">
   </a>
 
