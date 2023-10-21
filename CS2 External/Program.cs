@@ -239,6 +239,19 @@ namespace CS2EXTERNAL
                 {
                     ImGui.Checkbox("Enable ESP", ref enableESP);
 
+                    
+                    ImGui.Checkbox("Enable Team Box", ref enableTeamBox);
+                    ImGui.Checkbox("Enable Team Distance (not working atm)", ref enableTeamDistance);
+                    ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
+                    ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
+                    ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
+
+                    ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
+                    ImGui.Checkbox("Enable Enemy Distance (not working atm)", ref enableEnemyDistance);
+                    ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
+                    ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
+                    ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
+
                     ImGui.EndTabItem();
                 }
 
