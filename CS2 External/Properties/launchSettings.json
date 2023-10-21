@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CS2 External": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

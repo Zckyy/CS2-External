@@ -83,12 +83,14 @@ namespace CS2EXTERNAL
 
             if (ImGui.BeginTabBar("Tabs"))
             {
-                if (ImGui.BeginTabBar("General"))
+                if (ImGui.BeginTabItem("General"))
                 {
                     ImGui.Checkbox("Enable ESP", ref enableESP);
+
+                    ImGui.EndTabItem();
                 }
 
-                if (ImGui.BeginTabBar("Colours"))
+                if (ImGui.BeginTabItem("Colours"))
                 {
                     // team colours
                     ImGui.ColorPicker4("Team Colour", ref teamColour);
@@ -103,6 +105,9 @@ namespace CS2EXTERNAL
                     ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
                     ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
                     ImGui.Checkbox("Enemy Health Bar", ref enableHealthBar);
+
+                    ImGui.EndTabItem();
+
                 }
 
                 // End the tab bar.
