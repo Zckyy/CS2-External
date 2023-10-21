@@ -9,10 +9,10 @@ namespace CS2_External_Cheat
     public class Offsets
     {
         // bases
-        public int ViewMatrix = 0x1882570;
+        public int ViewMatrix = 0x1886710;
 
-        public int localPlayer = 0x18833A8;
-        public int entityList = 0x16B0890;
+        public int localPlayer = 0x1885C28;
+        public int entityList = 0x16B18A0;
 
         // Attributes
         public int teamNum = 0x3BF;

@@ -126,8 +126,13 @@ namespace CS2EXTERNAL
             while (true) // Always run
             {
                 ReloadEntityList();
+                foreach (var entity in entityList) 
+                {
+                    Console.WriteLine(entity.origin);
+                    Console.WriteLine(entity.health);
+                }
 
-                Thread.Sleep(3);
+                Thread.Sleep(2000);
             }
         }
 
