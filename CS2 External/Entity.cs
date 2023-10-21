@@ -15,6 +15,7 @@ namespace CS2_External_Cheat
         public int jumpFlag { get; set; }
         public Vector3 origin { get; set; }
         public Vector3 abs { get; set; }
+        public Vector3 viewOffset { get; set; }
         public Vector2 originScreenPosition { get; set; }
         public Vector2 absScreenPosition { get; set; }
     }

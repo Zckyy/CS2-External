@@ -31,7 +31,7 @@ namespace CS2EXTERNAL
 
         Swed swed = new Swed("cs2");
         Offsets offsets = new Offsets();
-        ImDrawListPtr ImDrawListPtr;
+        ImDrawListPtr drawList;
 
         Entity localPlayer = new Entity();
         List<Entity> entityList = new List<Entity>();
@@ -43,10 +43,10 @@ namespace CS2EXTERNAL
         // ImGui stuff
         // global colors
 
-        Vector4 teamColour = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
-        Vector4 enemyColour = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
-        Vector4 healthBarColour = new Vector4(0, 1, 0, 1); // RGBA, Green healthbar
-        Vector4 healthBarTextColour = new Vector4(0, 0, 0, 1); // RGBA, black text
+        Vector4 teamcolor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
+        Vector4 enemycolor = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
+        Vector4 healthBarcolor = new Vector4(0, 1, 0, 1); // RGBA, Green healthbar
+        Vector4 healthBarTextcolor = new Vector4(0, 0, 0, 1); // RGBA, black text
 
         // Screen variables, we update these later
 
@@ -63,11 +63,13 @@ namespace CS2EXTERNAL
         bool enableTeamBox = true;
         bool enableTeamDot = true;
         bool enableTeamHealthBar = true;
+        bool enableTeamDistance = true;
 
         bool enableEnemyLine = true;
         bool enableEnemyBox = true;
         bool enableEnemyDot = true;
-        bool enableHealthBar = true;
+        bool enableEnemyHealthBar = true;
+        bool enableEnemyDistance = true;
 
 
         protected override void Render()
@@ -75,6 +77,89 @@ namespace CS2EXTERNAL
             // only render stuff here
             DrawMenu();
             DrawOverlay();
+            Esp();
+            ImGui.End();
+        }
+
+        void Esp()
+        {
+            drawList = ImGui.GetWindowDrawList(); // Important to get the overlay
+
+            if (enableESP)
+            {
+                try // bad fix for stuff breaking but whatever it works
+                {
+                    foreach (var entity in entityList)
+                    {
+                        if (entity.teamNum == localPlayer.teamNum)
+                        {
+                            DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamDistance);
+                        }
+                        else
+                        {
+                            DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyDistance);
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+        }
+
+        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool distance)
+        {
+            // check if 2d position is valid
+            if (IsPixelInsideScreen(entity.originScreenPosition))
+            {
+                // convert our colors from imgui to units
+
+                uint uintColor = ImGui.ColorConvertFloat4ToU32(color);
+                uint uiintHealthTextColor = ImGui.ColorConvertFloat4ToU32(healthBarTextcolor);
+                uint uintHealthBarColor = ImGui.ColorConvertFloat4ToU32(healthBarcolor);
+
+                // Calculate box attributes
+
+                Vector2 boxWidth = new Vector2((entity.originScreenPosition.Y - entity.absScreenPosition.Y) / 2, 0f); // divide height by 2 simulate width
+                Vector2 boxStart = Vector2.Subtract(entity.absScreenPosition, boxWidth); // get top left corner of box
+                Vector2 boxEnd = Vector2.Add(entity.originScreenPosition, boxWidth); // get bottom right corner of box
+
+                // Calculate health bar stuff
+
+                float barPercentage = entity.health / 100f; // calculate percentage of health
+                Vector2 healthBarHeight = new Vector2(0, barPercentage * (entity.originScreenPosition.Y - entity.absScreenPosition.Y)); // calculate height of health bar by multiplying percentage by height of character
+                Vector2 healthBarStart = Vector2.Subtract(Vector2.Subtract(entity.originScreenPosition, boxWidth), healthBarHeight); // get position next to the box using box width
+                Vector2 heathBarEnd = Vector2.Subtract(entity.originScreenPosition, Vector2.Add(boxWidth, new Vector2(-4, 0))); // get bottom right end of the bar. The -4 is width of the bar.
+
+                // Finally draw
+                
+                if (line)
+                {
+                    drawList.AddLine(lineOrigin, entity.originScreenPosition, uintColor, 3); // draw line to feet of entities
+
+                }   
+                if (box)
+                {
+                    drawList.AddRect(boxStart, boxEnd, uintColor, 3); // draw box around entities
+                }
+                if (dot)
+                {
+                    drawList.AddCircleFilled(entity.originScreenPosition, 5, uintColor); // draw dot on entities
+                }
+                if (healthBar)
+                {
+                    drawList.AddText(healthBarStart, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
+                    drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 3); // draw health bar
+                }
+            }
+
+        }
+
+        bool IsPixelInsideScreen(Vector2 pixel)
+        {
+            // Check game window bounds
+            return pixel.X > windowLocation.X && pixel.X < windowLocation.X + windowSize.X && pixel.Y > windowLocation.Y && pixel.Y < windowLocation.Y + windowSize.Y;
         }
 
         ViewMatrix ReadMatrix(IntPtr matrixAddress)
@@ -157,21 +242,21 @@ namespace CS2EXTERNAL
                     ImGui.EndTabItem();
                 }
 
-                if (ImGui.BeginTabItem("Colours"))
+                if (ImGui.BeginTabItem("colors"))
                 {
-                    // team colours
-                    ImGui.ColorPicker4("Team Colour", ref teamColour);
+                    // team colors
+                    ImGui.ColorPicker4("Team color", ref teamcolor);
                     ImGui.Checkbox("Team Snap Line", ref enableTeamLine);
                     ImGui.Checkbox("Team Box", ref enableTeamBox);
                     ImGui.Checkbox("Team Dot", ref enableTeamDot);
                     ImGui.Checkbox("Team Health Bar", ref enableTeamHealthBar);
 
-                    // enemy colours
-                    ImGui.ColorPicker4("Enemy Colour", ref enemyColour);
+                    // enemy colors
+                    ImGui.ColorPicker4("Enemy color", ref enemycolor);
                     ImGui.Checkbox("Enemy Snap Line", ref enableEnemyLine);
                     ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
                     ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
-                    ImGui.Checkbox("Enemy Health Bar", ref enableHealthBar);
+                    ImGui.Checkbox("Enemy Health Bar", ref enableEnemyHealthBar);
 
                     ImGui.EndTabItem();
 
@@ -204,7 +289,7 @@ namespace CS2EXTERNAL
             var window = GetWindowRect(swed.GetProcess().MainWindowHandle);
             windowLocation = new Vector2(window.left, window.top);
             windowSize = new Vector2(window.right - window.left, window.bottom - window.top);
-            lineOrigin = new Vector2(windowLocation.X + windowLocation.X / 2, window.bottom);
+            lineOrigin = new Vector2(windowLocation.X + windowSize.X / 2, window.bottom);
             windowCenter = new Vector2(lineOrigin.X, window.bottom - windowSize.Y / 2);
 
             client = swed.GetModuleBase("client.dll");
@@ -212,19 +297,22 @@ namespace CS2EXTERNAL
             while (true) // Always run
             {
                 ReloadEntityList();
-                foreach (var entity in entityList) 
-                {
-                    Console.WriteLine(entity.origin);
-                    Console.WriteLine(entity.health);
-                }
+                Thread.Sleep(3);
 
-                Thread.Sleep(2000);
+                // Debugging
+                //foreach (var entity in entityList) 
+                //{
+                //    Console.WriteLine(entity.origin);
+                //    Console.WriteLine(entity.health);
+                //}
             }
         }
 
         void ReloadEntityList()
         {
             entityList.Clear();
+            playerTeam.Clear();
+            enemyTeam.Clear();
 
             localPlayer.address = swed.ReadPointer(client, offsets.localPlayer); // set the address so we can update it later
             UpdateEntity(localPlayer);
@@ -269,9 +357,22 @@ namespace CS2EXTERNAL
 
         void UpdateEntity(Entity entity)
         {
+            // 1d
             entity.health = swed.ReadInt(entity.address, offsets.health);
-            entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
+            entity.origin = swed.ReadVec(entity.address, offsets.origin);
+
+            // 3d
+            entity.origin = swed.ReadVec(entity.address, offsets.origin);
+            entity.viewOffset = new Vector3(0, 0, 65); // Simulate view offset (Height of character in game)
+            entity.abs = Vector3.Add(entity.origin, entity.viewOffset);
+
+            // 2d, have to calculate 3d before 2d
+
+            var currentViewmatrix = ReadMatrix(client + offsets.ViewMatrix);
+            entity.originScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.origin, (int)windowSize.X, (int)windowSize.Y), windowLocation);
+            entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
+
         }
 
         static void Main(string[] args)
