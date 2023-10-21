@@ -14,6 +14,9 @@ namespace CS2EXTERNAL
     {
         // imports and struct
         [DllImport("user32.dll")]
+        static extern int GetAsyncKeyState(int vKey);
+
+        [DllImport("user32.dll")]
         static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
         [StructLayout(LayoutKind.Sequential)]
@@ -42,6 +45,14 @@ namespace CS2EXTERNAL
 
         IntPtr client;
 
+        // constants
+
+        const int AIMBOT_HOTKEY = 0x06; // xbuttgo2 aka Mouse5
+
+        // other vectors
+
+        Vector3 offsetVector = new Vector3(0, 0, 5); // subtract 5 units from the height of the character to aim at uppper chest
+
         // ImGui stuff
 
         Vector4 teamcolor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
@@ -58,8 +69,10 @@ namespace CS2EXTERNAL
 
         // ImGui checkboxes and stuff
 
-        bool enableESP = true;
         bool killswitch = false;
+
+        bool enableESP = true;
+        bool enableAimbot = true;
 
         bool enableTeamLine = false;
         bool enableTeamBox = true;
@@ -73,8 +86,6 @@ namespace CS2EXTERNAL
         bool enableEnemyHealthBar = true;
         bool enableEnemyDistance = true;
 
-
-
         protected override void Render()
         {
             // only render stuff here
@@ -82,6 +93,53 @@ namespace CS2EXTERNAL
             DrawOverlay();
             Esp();
             ImGui.End();
+        }
+
+        void Aimbot()
+        {
+            if (enableAimbot && GetAsyncKeyState(AIMBOT_HOTKEY) > 0) // if hotkey and aimbot is enabled
+            {
+                if (enemyTeam.Count > 0)
+                {
+                    // aim at first entity in enemy team list
+
+                    var angles = CalculateAngles(localPlayer.origin, Vector3.Subtract(enemyTeam[0].origin, offsetVector));
+                    AimAt(angles); // aim at the angles
+                }
+            }
+        }
+
+        void AimAt(Vector3 angles)
+        {
+            swed.WriteFloat(client, offsets.ViewAngle, angles.Y); // Pitch - Y as before x this time.
+            swed.WriteFloat(client, offsets.ViewAngle + 0x4, angles.X); // Yaw -  A float is 4 bytes so we add 4 to the address to get Yaw
+        }
+
+        Vector3 CalculateAngles(Vector3 from, Vector3 destination)
+        {
+            float yaw;
+            float pitch;
+
+            // calculate the yaw
+
+            float deltaX = destination.X - from.X;
+            float deltaY = destination.Y - from.Y;
+            yaw = (float)(Math.Atan2(deltaY, deltaX) * 180 / Math.PI); // We use triangles
+
+            // calculate the pitch
+             
+            float deltaZ = destination.Z - from.Z;
+            double distance = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2)); // calculate distance between the two points
+            pitch = -(float)(Math.Atan2(deltaZ, distance) * 180 / Math.PI);
+
+            // return angles
+
+            return new Vector3(yaw, pitch, 0);
+        }
+
+        float CalculateMagnitude(Vector3 v1, Vector3 v2)
+        {
+            return (float)Math.Sqrt(Math.Pow(v2.X - v1.X,2) + Math.Pow(v2.Y - v1.X,2) + Math.Pow(v2.Z - v1.Z,2));
         }
 
         void Esp()
@@ -294,7 +352,7 @@ namespace CS2EXTERNAL
 
                 if (ImGui.BeginTabItem("Aimboob"))
                 {
-
+                    ImGui.Checkbox("Enable Aimboob", ref enableAimbot);
                 }
 
                 if (ImGui.BeginTabItem("Misc"))
@@ -307,8 +365,6 @@ namespace CS2EXTERNAL
                 // End the tab bar.
                 ImGui.EndTabBar();
             }
-
-            ImGui.SetWindowCollapsed(true);
 
             ImGui.End();
         }
@@ -343,17 +399,14 @@ namespace CS2EXTERNAL
                 ReloadEntityList();
                 Thread.Sleep(1);
 
-                //// Check if f6 key is pressed, if so then set killswitch to true
-                //if (key)
-                //{
-
-                //}
-
-
-
                 if (killswitch == true)
                 {
                     Environment.Exit(0);
+                }
+
+                if (enableAimbot)
+                {
+                    Aimbot();
                 }
 
                 // Debugging
@@ -374,6 +427,8 @@ namespace CS2EXTERNAL
             localPlayer.address = swed.ReadPointer(client, offsets.localPlayer); // set the address so we can update it later
             UpdateEntity(localPlayer);
             updateEntityList();
+            
+            enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
         }   
 
         void updateEntityList() // handle all other entities here
@@ -414,22 +469,24 @@ namespace CS2EXTERNAL
 
         void UpdateEntity(Entity entity)
         {
-            // 1d
-            entity.health = swed.ReadInt(entity.address, offsets.health);
-            entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
-            entity.origin = swed.ReadVec(entity.address, offsets.origin);
+            // Calculate 3d then 2d then 1d
 
             // 3d
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.viewOffset = new Vector3(0, 0, 65); // Simulate view offset (Height of character in game)
             entity.abs = Vector3.Add(entity.origin, entity.viewOffset);
 
-            // 2d, have to calculate 3d before 2d
+            // 2d
 
             var currentViewmatrix = ReadMatrix(client + offsets.ViewMatrix);
             entity.originScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.origin, (int)windowSize.X, (int)windowSize.Y), windowLocation);
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
+            // 1d
+            entity.health = swed.ReadInt(entity.address, offsets.health);
+            entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
+            entity.origin = swed.ReadVec(entity.address, offsets.origin);
+            entity.magnitude = CalculateMagnitude(localPlayer.origin, entity.origin);
         }
 
         static void Main(string[] args)
