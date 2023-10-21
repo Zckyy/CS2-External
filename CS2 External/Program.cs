@@ -4,6 +4,7 @@ using Swed64;
 using System.Numerics;
 using ImGuiNET;
 using System.Runtime.InteropServices;
+using CS2_External;
 
 namespace CS2EXTERNAL
 {
@@ -72,9 +73,75 @@ namespace CS2EXTERNAL
         protected override void Render()
         {
             // only render stuff here
-            ImGui.SetNextWindowSize(new Vector2(400, 300));
-            ImGui.Begin("CS2 External Cheat");
             DrawMenu();
+            DrawOverlay();
+        }
+
+        ViewMatrix ReadMatrix(IntPtr matrixAddress)
+        {
+            var viewMatrix = new ViewMatrix();
+            var floatMatrix = swed.ReadMatrix(matrixAddress);
+
+            // convert floats to our own viematrix type
+
+            viewMatrix.m11 = floatMatrix[0];
+            viewMatrix.m12 = floatMatrix[1];
+            viewMatrix.m13 = floatMatrix[2];
+            viewMatrix.m14 = floatMatrix[3];
+
+            viewMatrix.m21 = floatMatrix[4];
+            viewMatrix.m22 = floatMatrix[5];
+            viewMatrix.m23 = floatMatrix[6];
+            viewMatrix.m24 = floatMatrix[7];
+
+            viewMatrix.m31 = floatMatrix[8];
+            viewMatrix.m32 = floatMatrix[9];
+            viewMatrix.m33 = floatMatrix[10];
+            viewMatrix.m34 = floatMatrix[11];
+
+            viewMatrix.m41 = floatMatrix[12];
+            viewMatrix.m42 = floatMatrix[13];
+            viewMatrix.m43 = floatMatrix[14];
+            viewMatrix.m44 = floatMatrix[15];
+
+            return viewMatrix;
+        }
+
+        Vector2 WorldToScreen(ViewMatrix matrix, Vector3 pos, int width, int height)
+        {
+            Vector2 screenCoordinates = new Vector2();
+
+            // Calculate screenW
+
+            float screenW = (matrix.m41 * pos.X) + (matrix.m42 * pos.Y) + (matrix.m43 * pos.Z) + matrix.m44;
+
+            if (screenW > 0.001f) // check if entity is in front of us
+            {
+                // Calculate screen X
+                float screenX = (matrix.m11 * pos.X) + (matrix.m12 * pos.Y) + (matrix.m13 * pos.Z) + matrix.m14;
+
+                // Calculate screen Y
+                float screenY = -(matrix.m21 * pos.X) + (matrix.m22 * pos.Y) + (matrix.m23 * pos.Z) + matrix.m24;
+
+                // Calculate camera center
+                float camX = width / 2;
+                float camY = height / 2;
+
+                // Perform perspective division and transformation
+
+                float X = camX + (camX * screenX / screenW);
+                float Y = camY - (camY * screenY / screenW);
+
+                // return x and y
+
+                screenCoordinates.X = X;
+                screenCoordinates.Y = Y;
+                return screenCoordinates;
+            }
+            else // return out of bounds vector if not in front of us
+            {
+                return new Vector2(-99, -99);
+            }
         }
 
         void DrawMenu()
@@ -115,6 +182,20 @@ namespace CS2EXTERNAL
             }
 
             ImGui.End();
+        }
+
+        void DrawOverlay() // Draw new window over the game window
+        {
+            ImGui.SetNextWindowSize(windowSize);
+            ImGui.SetNextWindowPos(windowLocation);
+            ImGui.Begin("Overlay", ImGuiWindowFlags.NoDecoration
+                | ImGuiWindowFlags.NoBackground
+                | ImGuiWindowFlags.NoMove
+                | ImGuiWindowFlags.NoInputs
+                | ImGuiWindowFlags.NoCollapse
+                | ImGuiWindowFlags.NoScrollbar
+                | ImGuiWindowFlags.NoScrollWithMouse
+                );
         }
 
         void MainLogic()
