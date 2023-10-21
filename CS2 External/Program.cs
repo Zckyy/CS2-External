@@ -5,6 +5,8 @@ using System.Numerics;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 using CS2_External;
+using Veldrid;
+using Veldrid.Sdl2;
 
 namespace CS2EXTERNAL
 {
@@ -41,7 +43,6 @@ namespace CS2EXTERNAL
         IntPtr client;
 
         // ImGui stuff
-        // global colors
 
         Vector4 teamcolor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
         Vector4 enemycolor = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
@@ -58,18 +59,20 @@ namespace CS2EXTERNAL
         // ImGui checkboxes and stuff
 
         bool enableESP = true;
+        bool killswitch = false;
 
-        bool enableTeamLine = true;
+        bool enableTeamLine = false;
         bool enableTeamBox = true;
         bool enableTeamDot = true;
         bool enableTeamHealthBar = true;
         bool enableTeamDistance = true;
 
-        bool enableEnemyLine = true;
+        bool enableEnemyLine = false;
         bool enableEnemyBox = true;
         bool enableEnemyDot = true;
         bool enableEnemyHealthBar = true;
         bool enableEnemyDistance = true;
+
 
 
         protected override void Render()
@@ -206,7 +209,7 @@ namespace CS2EXTERNAL
                 float screenX = (matrix.m11 * pos.X) + (matrix.m12 * pos.Y) + (matrix.m13 * pos.Z) + matrix.m14;
 
                 // Calculate screen Y
-                float screenY = -(matrix.m21 * pos.X) + (matrix.m22 * pos.Y) + (matrix.m23 * pos.Z) + matrix.m24;
+                float screenY = (matrix.m21 * pos.X) + (matrix.m22 * pos.Y) + (matrix.m23 * pos.Z) + matrix.m24;
 
                 // Calculate camera center
                 float camX = width / 2;
@@ -235,16 +238,23 @@ namespace CS2EXTERNAL
 
             if (ImGui.BeginTabBar("Tabs"))
             {
-                if (ImGui.BeginTabItem("General"))
+                if (ImGui.BeginTabItem("ESP"))
                 {
-                    ImGui.Checkbox("Enable ESP", ref enableESP);
+                    ImGui.Text("ESP");
 
+                    ImGui.Checkbox("Enable ESP", ref enableESP);
+                    ImGui.Separator();
+
+                    ImGui.Text("Team");
                     
                     ImGui.Checkbox("Enable Team Box", ref enableTeamBox);
                     ImGui.Checkbox("Enable Team Distance (not working atm)", ref enableTeamDistance);
                     ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
                     ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
                     ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
+                    ImGui.Separator();
+
+                    ImGui.Text("Enemy");
 
                     ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
                     ImGui.Checkbox("Enable Enemy Distance (not working atm)", ref enableEnemyDistance);
@@ -255,29 +265,50 @@ namespace CS2EXTERNAL
                     ImGui.EndTabItem();
                 }
 
-                if (ImGui.BeginTabItem("colors"))
+                if (ImGui.BeginTabItem("Colors"))
                 {
+
                     // team colors
+                    ImGui.Text("Team");
+
                     ImGui.ColorPicker4("Team color", ref teamcolor);
                     ImGui.Checkbox("Team Snap Line", ref enableTeamLine);
                     ImGui.Checkbox("Team Box", ref enableTeamBox);
                     ImGui.Checkbox("Team Dot", ref enableTeamDot);
                     ImGui.Checkbox("Team Health Bar", ref enableTeamHealthBar);
+                    ImGui.Separator();
 
                     // enemy colors
+                    ImGui.Text("Enemy");
+
                     ImGui.ColorPicker4("Enemy color", ref enemycolor);
                     ImGui.Checkbox("Enemy Snap Line", ref enableEnemyLine);
                     ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
                     ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
                     ImGui.Checkbox("Enemy Health Bar", ref enableEnemyHealthBar);
+                    ImGui.Separator();
 
                     ImGui.EndTabItem();
 
                 }
 
+                if (ImGui.BeginTabItem("Aimboob"))
+                {
+
+                }
+
+                if (ImGui.BeginTabItem("Misc"))
+                {
+                    ImGui.Checkbox("Killsitch (Closes the Cheat)", ref killswitch);
+                }
+
+
+
                 // End the tab bar.
                 ImGui.EndTabBar();
             }
+
+            ImGui.SetWindowCollapsed(true);
 
             ImGui.End();
         }
@@ -310,7 +341,20 @@ namespace CS2EXTERNAL
             while (true) // Always run
             {
                 ReloadEntityList();
-                Thread.Sleep(3);
+                Thread.Sleep(1);
+
+                //// Check if f6 key is pressed, if so then set killswitch to true
+                //if (key)
+                //{
+
+                //}
+
+
+
+                if (killswitch == true)
+                {
+                    Environment.Exit(0);
+                }
 
                 // Debugging
                 //foreach (var entity in entityList) 
