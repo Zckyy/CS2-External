@@ -72,8 +72,8 @@ namespace CS2EXTERNAL
         bool killswitch = false;
 
         bool enableESP = true;
-        bool enableAimbot = true;
-        bool enableAimClosestToCrosshair = true;
+        bool enableAimbot = false;
+        bool enableAimClosestToCrosshair = false;
 
         bool enableTeamLine = false;
         bool enableTeamBox = true;
@@ -327,6 +327,7 @@ namespace CS2EXTERNAL
                     ImGui.Text("ESP");
 
                     ImGui.Checkbox("Enable ESP", ref enableESP);
+                    ShowContextMenuTooltip("Toggles the Wallhacks");
                     ImGui.Separator();
 
                     ImGui.Text("Team");
@@ -336,6 +337,7 @@ namespace CS2EXTERNAL
                     ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
                     ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
                     ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
+                    ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
                     ImGui.Separator();
 
                     ImGui.Text("Enemy");
@@ -345,6 +347,7 @@ namespace CS2EXTERNAL
                     ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
                     ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
                     ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
+                    ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
 
                     ImGui.EndTabItem();
                 }
@@ -404,6 +407,16 @@ namespace CS2EXTERNAL
             }
 
             ImGui.End();
+        }
+
+        public static void ShowContextMenuTooltip(string tooltipText)
+        {
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.Text($"{tooltipText}");
+                ImGui.EndTooltip();
+            }
         }
 
         void DrawOverlay() // Draw new window over the game window
