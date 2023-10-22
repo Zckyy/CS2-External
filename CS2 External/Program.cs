@@ -73,6 +73,7 @@ namespace CS2EXTERNAL
 
         bool enableESP = true;
         bool enableAimbot = true;
+        bool enableAimClosestToCrosshair = true;
 
         bool enableTeamLine = false;
         bool enableTeamBox = true;
@@ -155,6 +156,11 @@ namespace CS2EXTERNAL
             // return angles
 
             return new Vector3(yaw, pitch, 0);
+        }
+
+        float CaclulatePixelDistance(Vector2 v1, Vector2 v2)
+        {
+            return (float)Math.Sqrt(Math.Pow(v2.X - v1.X, 2) + Math.Pow(v2.Y - v1.Y, 2));
         }
 
         float CalculateMagnitude(Vector3 v1, Vector3 v2)
@@ -370,14 +376,25 @@ namespace CS2EXTERNAL
 
                 }
 
-                if (ImGui.BeginTabItem("Aimboob"))
+                if (ImGui.BeginTabItem("Aimboob (UNSAFE MAY CAUSE BANS)"))
                 {
-                    ImGui.Checkbox("Enable Aimboob", ref enableAimbot);
+                    // Disable the aimboob
+                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
+                    ImGui.Checkbox("Aimboob", ref enableAimbot);
+                    ImGui.PopStyleVar();
+
+                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
+                    ImGui.Checkbox("Closest To Crosshair", ref enableAimClosestToCrosshair);
+                    ImGui.PopStyleVar();
+
+                    ImGui.EndTabItem();
                 }
 
                 if (ImGui.BeginTabItem("Misc"))
                 {
                     ImGui.Checkbox("Killsitch (Closes the Cheat)", ref killswitch);
+
+                    ImGui.EndTabItem();
                 }
 
 
@@ -447,9 +464,20 @@ namespace CS2EXTERNAL
             localPlayer.address = swed.ReadPointer(client, offsets.localPlayer); // set the address so we can update it later
             UpdateEntity(localPlayer);
             updateEntityList();
-            
-            enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
-        }   
+
+            // check if enableAimClosestToCrosshair is enabled
+            if (enableAimClosestToCrosshair)
+            {
+                if (enemyTeam.Count > 0)
+                {
+                    enemyTeam = enemyTeam.OrderBy(x => x.angleDifference).ToList(); // sort the list by angle difference
+                }
+            }
+            else
+            {
+                enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
+            }
+        }
 
         void updateEntityList() // handle all other entities here
         {
@@ -503,6 +531,7 @@ namespace CS2EXTERNAL
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
             // 1d
+            entity.angleDifference = CaclulatePixelDistance(windowCenter, entity.absScreenPosition);
             entity.health = swed.ReadInt(entity.address, offsets.health);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
