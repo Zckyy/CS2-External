@@ -72,8 +72,8 @@ namespace CS2EXTERNAL
         bool killswitch = false;
 
         bool enableESP = true;
-        bool enableAimbot = false;
-        bool enableAimClosestToCrosshair = false;
+        //bool enableAimbot = false;
+        //bool enableAimClosestToCrosshair = false;
 
         bool enableTeamLine = false;
         bool enableTeamBox = true;
@@ -96,7 +96,7 @@ namespace CS2EXTERNAL
             ImGui.End();
         }
 
-        void Aimbot()
+        /*void Aimbot()
         {
             if (enableAimbot && GetAsyncKeyState(AIMBOT_HOTKEY) > 0) // if hotkey and aimbot is enabled
             {
@@ -166,7 +166,7 @@ namespace CS2EXTERNAL
         float CalculateMagnitude(Vector3 v1, Vector3 v2)
         {
             return (float)Math.Sqrt(Math.Pow(v2.X - v1.X,2) + Math.Pow(v2.Y - v1.X,2) + Math.Pow(v2.Z - v1.Z,2));
-        }
+        }*/
 
         void Esp()
         {
@@ -379,7 +379,7 @@ namespace CS2EXTERNAL
 
                 }
 
-                if (ImGui.BeginTabItem("Aimboob (UNSAFE MAY CAUSE BANS)"))
+                /*if (ImGui.BeginTabItem("Aimboob (UNSAFE MAY CAUSE BANS)"))
                 {
                     // Disable the aimboob
                     ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
@@ -391,7 +391,7 @@ namespace CS2EXTERNAL
                     ImGui.PopStyleVar();
 
                     ImGui.EndTabItem();
-                }
+                }*/
 
                 if (ImGui.BeginTabItem("Misc"))
                 {
@@ -454,10 +454,10 @@ namespace CS2EXTERNAL
                     Environment.Exit(0);
                 }
 
-                if (enableAimbot)
+                /*if (enableAimbot)
                 {
                     Aimbot();
-                }
+                }*/
 
                 // Debugging
                 //foreach (var entity in entityList) 
@@ -479,7 +479,7 @@ namespace CS2EXTERNAL
             updateEntityList();
 
             // check if enableAimClosestToCrosshair is enabled
-            if (enableAimClosestToCrosshair)
+            /*if (enableAimClosestToCrosshair)
             {
                 if (enemyTeam.Count > 0)
                 {
@@ -489,7 +489,7 @@ namespace CS2EXTERNAL
             else
             {
                 enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
-            }
+            }*/
         }
 
         void updateEntityList() // handle all other entities here
@@ -544,11 +544,11 @@ namespace CS2EXTERNAL
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
             // 1d
-            entity.angleDifference = CaclulatePixelDistance(windowCenter, entity.absScreenPosition);
+            // entity.angleDifference = CaclulatePixelDistance(windowCenter, entity.absScreenPosition);
             entity.health = swed.ReadInt(entity.address, offsets.health);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
-            entity.magnitude = CalculateMagnitude(localPlayer.origin, entity.origin);
+            // entity.magnitude = CalculateMagnitude(localPlayer.origin, entity.origin);
         }
 
         static void Main(string[] args)
