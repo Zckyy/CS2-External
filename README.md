@@ -19,5 +19,6 @@
 
 - Zero game memory writes. Read only.
 - ImGui and overlay drawings.
+- The game must be open before running exe
 
 `Educational purposes only. Do not use without -insecure launch option in steam properties window.`
