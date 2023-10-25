@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using CS2_External;
 using Veldrid;
 using Veldrid.Sdl2;
+using Point = SixLabors.ImageSharp.Point;
 
 namespace CS2EXTERNAL
 {
@@ -18,6 +19,9 @@ namespace CS2EXTERNAL
 
         [DllImport("user32.dll")]
         static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetCursorPos(int x, int y);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -105,15 +109,28 @@ namespace CS2EXTERNAL
                     // aim at first entity in enemy team list
 
                     var angles = ClampAngles(CalculateAngles(localPlayer.origin, Vector3.Subtract(enemyTeam[0].origin, offsetVector)));
-                    AimAt(angles); // aim at the angles
+
+
+                    AimAt(enemyTeam); // aim at the angles
                 }
             }
         }
 
-        void AimAt(Vector3 angles)
+        void AimAt(List<Entity> entityList)
         {
-            swed.WriteFloat(client, offsets.ViewAngle, angles.Y); // Pitch - Y as before x this time.
-            swed.WriteFloat(client, offsets.ViewAngle + 0x4, angles.X); // Yaw -  A float is 4 bytes so we add 4 to the address to get Yaw
+            Entity closestEntity = new Entity();
+
+            foreach (var entiy in entityList)
+            {
+                // cloesest entity in the list is assigned to cloesestEntity variable
+                closestEntity = enemyTeam.OrderBy(x => x.angleDifference).First();
+            }
+
+            // Convert the Vector2 to screen coordinates
+            Point screenPosition = new Point((int)closestEntity.absScreenPosition.X, (int)closestEntity.absScreenPosition.Y);
+
+            // Move the mouse to the specified location
+            SetCursorPos(screenPosition.X, screenPosition.Y);
         }
 
         Vector3 ClampAngles(Vector3 angles)
