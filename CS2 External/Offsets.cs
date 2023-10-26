@@ -9,10 +9,10 @@ namespace CS2_External_Cheat
     public class Offsets
     {
         // client
-        public int ViewMatrix = 0x1886710;
-        public int ViewAngle = 0x18E5740;
-        public int localPlayer = 0x1885C28;
-        public int entityList = 0x16B18A0;
+        public int ViewMatrix = 0x1887730;
+        public int ViewAngle = 0x18E6770;
+        public int localPlayer = 0x1886C48;
+        public int entityList = 0x16B28A0;
         public int dwForceJump = 0x169E360;
 
         // entity attributes

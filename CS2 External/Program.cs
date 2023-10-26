@@ -47,7 +47,7 @@ namespace CS2EXTERNAL
 
         // constants
 
-        const int ESP_HOTKEY = 0x06; // xbuttgo2 aka Mouse5
+        const int ESP_HOTKEY = 0x70; // xbuttgo2 aka Mouse5
 
         // other vectors
 
@@ -457,6 +457,7 @@ namespace CS2EXTERNAL
                 if (GetAsyncKeyState(ESP_HOTKEY) > 0)
                 {
                     enableESP = !enableESP;
+                    Thread.Sleep(500);
                 }
 
                 /*if (enableAimbot)
