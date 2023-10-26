@@ -5,20 +5,28 @@ using System.Numerics;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 using CS2_External;
-using Veldrid;
-using Veldrid.Sdl2;
-using System.Reflection;
+using System.Windows.Forms;
 
 namespace CS2EXTERNAL
 {
     class Program : Overlay
     {
+        [Flags]
+        public enum MouseEventFlags
+        {
+            LEFTDOWN = 0x00000002,
+            LEFTUP = 0x00000004,
+        }
+
         // imports and struct
         [DllImport("user32.dll")]
         static extern int GetAsyncKeyState(int vKey);
 
         [DllImport("user32.dll")]
         static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -47,13 +55,13 @@ namespace CS2EXTERNAL
         IntPtr client;
 
         // constants
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
         const int ESP_HOTKEY = 0x71; // F2 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
-
-        // other vectors
-
-        Vector3 offsetVector = new Vector3(0, 0, 5); // subtract 5 units from the height of the character to aim at uppper chest
+        const int TRIGGER_KEY = 0x05; // X1 mouse button Hotkey
 
         // ImGui stuff
 
@@ -94,6 +102,23 @@ namespace CS2EXTERNAL
         bool enableEnemyDot = true;
         bool enableEnemyHealthBar = true;
         bool enableEnemyDistance = true;
+
+        bool IsAimingAtEnemy()
+        {
+            if (localPlayer.m_iIDEntIndex > -1)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        void LeftClick(int x, int y)
+        {
+            Cursor.Position = new System.Drawing.Point(x, y);
+            mouse_event((int)(MouseEventFlags.LEFTDOWN), 0, 0, 0, 0);
+            mouse_event((int)(MouseEventFlags.LEFTUP), 0, 0, 0, 0);
+        }
 
         protected override void Render()
         {
@@ -303,6 +328,7 @@ namespace CS2EXTERNAL
                     if (ImGui.BeginTabItem("ESP"))
                     {
                         ImGui.Text("ESP");
+                        ImGui.Text($"{localPlayer.dwPlantedC4}");
 
                         ImGui.Checkbox("Enable ESP", ref enableESP);
                         ShowContextMenuTooltip("Toggles the Wallhacks");
@@ -475,10 +501,17 @@ namespace CS2EXTERNAL
 
             client = swed.GetModuleBase("client.dll");
 
+
             while (true) // Always run
             {
                 ReloadEntityList();
                 Thread.Sleep(1);
+
+                if (IsAimingAtEnemy() & GetAsyncKeyState(TRIGGER_KEY) > 1)
+                {
+                    LeftClick((int)windowCenter.X, (int)windowCenter.Y);
+                    Thread.Sleep(40);
+                }
 
                 if (killswitch == true || GetAsyncKeyState(PANIC_KEY) > 0)
                 {
@@ -488,7 +521,7 @@ namespace CS2EXTERNAL
                 if (GetAsyncKeyState(ESP_HOTKEY) > 0)
                 {
                     enableESP = !enableESP;
-                    Thread.Sleep(80);
+                    LeftClick((int)windowCenter.X, (int)windowCenter.Y);
                 }
 
                 if (GetAsyncKeyState(MENU_HOTKEY) > 0)
@@ -575,11 +608,12 @@ namespace CS2EXTERNAL
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
             // 1d
-            // entity.angleDifference = CaclulatePixelDistance(windowCenter, entity.absScreenPosition);
             entity.health = swed.ReadInt(entity.address, offsets.health);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
-            // entity.magnitude = CalculateMagnitude(localPlayer.origin, entity.origin);
+            entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
+            entity.dwGameRules = swed.ReadInt(entity.address, offsets.dwGameRules);
+            entity.dwPlantedC4 = swed.ReadBool(entity.address, offsets.dwPlantedC4 + entity.dwGameRules);
         }
 
         static void Main(string[] args)

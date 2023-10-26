@@ -14,6 +14,9 @@ namespace CS2_External_Cheat
         public int localPlayer = 0x1886C48;
         public int entityList = 0x16B28A0;
         public int dwForceJump = 0x169E360;
+        public int m_iIDEntIndex = 0x1524;
+        public int dwGameRules = 0x17F5488;
+        public int dwPlantedC4 = 0x188BFE0;
 
         // entity attributes
         public int teamNum = 0x3BF;
