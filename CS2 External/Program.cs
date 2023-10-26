@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using CS2_External;
 using Veldrid;
 using Veldrid.Sdl2;
+using System.Reflection;
 
 namespace CS2EXTERNAL
 {
@@ -46,8 +47,9 @@ namespace CS2EXTERNAL
         IntPtr client;
 
         // constants
-
-        const int ESP_HOTKEY = 0x70; // xbuttgo2 aka Mouse5
+        const int MENU_HOTKEY = 0x70; // F1 Hotkey
+        const int ESP_HOTKEY = 0x71; // F2 Hotkey
+        const int PANIC_KEY = 0x73; // F4 Hotkey
 
         // other vectors
 
@@ -68,6 +70,12 @@ namespace CS2EXTERNAL
         Vector2 windowCenter = new Vector2(1920 / 2, 1080 / 2);
 
         // ImGui checkboxes and stuff
+
+        bool showWindow = true;
+
+        float r = 1.0f;
+        float g = 1.0f;
+        float b = 1.0f;
 
         bool killswitch = false;
 
@@ -90,83 +98,16 @@ namespace CS2EXTERNAL
         protected override void Render()
         {
             // only render stuff here
-            DrawMenu();
+
+            if (!showWindow)
+            {
+                DrawMenu();
+            }
+
             DrawOverlay();
             Esp();
             ImGui.End();
         }
-
-        /*void Aimbot()
-        {
-            if (enableAimbot && GetAsyncKeyState(AIMBOT_HOTKEY) > 0) // if hotkey and aimbot is enabled
-            {
-                if (enemyTeam.Count > 0)
-                {
-                    // aim at first entity in enemy team list
-
-                    var angles = ClampAngles(CalculateAngles(localPlayer.origin, Vector3.Subtract(enemyTeam[0].origin, offsetVector)));
-                    AimAt(angles); // aim at the angles
-                }
-            }
-        }
-
-        void AimAt(Vector3 angles)
-        {
-            swed.WriteFloat(client, offsets.ViewAngle, angles.Y); // Pitch - Y as before x this time.
-            swed.WriteFloat(client, offsets.ViewAngle + 0x4, angles.X); // Yaw -  A float is 4 bytes so we add 4 to the address to get Yaw
-        }
-
-        Vector3 ClampAngles(Vector3 angles)
-        {
-            while (angles.X > 180.0f)
-                angles.X -= 360.0f;
-
-            while (angles.X < -180.0f)
-                angles.X += 360.0f;
-
-            while (angles.Y > 89.0f)
-                angles.Y -= 360.0f;
-
-            while (angles.Y < -89.0f)
-                angles.Y += 360.0f;
-
-            if (angles.Z != 0.0f)
-                angles.Z = 0.0f;
-
-            return angles;
-        }
-
-        Vector3 CalculateAngles(Vector3 from, Vector3 destination)
-        {
-            float yaw;
-            float pitch;
-
-            // calculate the yaw
-
-            float deltaX = destination.X - from.X;
-            float deltaY = destination.Y - from.Y;
-            yaw = (float)(Math.Atan2(deltaY, deltaX) * 180 / Math.PI); // We use triangles
-
-            // calculate the pitch
-             
-            float deltaZ = destination.Z - from.Z;
-            double distance = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2)); // calculate distance between the two points
-            pitch = -(float)(Math.Atan2(deltaZ, distance) * 180 / Math.PI);
-
-            // return angles
-
-            return new Vector3(yaw, pitch, 0);
-        }
-
-        float CaclulatePixelDistance(Vector2 v1, Vector2 v2)
-        {
-            return (float)Math.Sqrt(Math.Pow(v2.X - v1.X, 2) + Math.Pow(v2.Y - v1.Y, 2));
-        }
-
-        float CalculateMagnitude(Vector3 v1, Vector3 v2)
-        {
-            return (float)Math.Sqrt(Math.Pow(v2.X - v1.X,2) + Math.Pow(v2.Y - v1.X,2) + Math.Pow(v2.Z - v1.Z,2));
-        }*/
 
         void Esp()
         {
@@ -176,15 +117,21 @@ namespace CS2EXTERNAL
             {
                 try // bad fix for stuff breaking but whatever it works
                 {
-                    foreach (var entity in entityList)
+                    if (entityList.Any())
                     {
-                        if (entity.teamNum == localPlayer.teamNum)
+                        foreach (var entity in entityList)
                         {
-                            DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamDistance);
-                        }
-                        else
-                        {
-                            DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyDistance);
+                            if (entity != null) 
+                            {
+                                if (entity.teamNum == localPlayer.teamNum)
+                                {
+                                    DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamDistance);
+                                }
+                                else
+                                {
+                                    DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyDistance);
+                                }
+                            }
                         }
                     }
                 }
@@ -318,95 +265,179 @@ namespace CS2EXTERNAL
 
         void DrawMenu()
         {
-            ImGui.Begin("CS2 External Cheat - https://github.com/Zckyy");
-
-            if (ImGui.BeginTabBar("Tabs"))
+            try
             {
-                if (ImGui.BeginTabItem("ESP"))
+                // Styling
+                RGBUpdate();
+                ImGuiStylePtr style = ImGui.GetStyle();
+                ImGuiIOPtr io = ImGui.GetIO();
+
+                style.WindowRounding = 5f;
+                style.WindowBorderSize = 3f;
+                style.WindowMinSize = new Vector2(700, 700);
+
+                // Background and border
+                style.Colors[(int)ImGuiCol.Border] = new Vector4(r, b, g, 0.5f);
+                style.Colors[(int)ImGuiCol.WindowBg] = new Vector4(0, 0, 0, 1f);
+                style.Colors[(int)ImGuiCol.FrameBg] = new Vector4(0, 0, 0, 1f);
+                style.Colors[(int)ImGuiCol.TitleBgActive] = new Vector4(0, 0, 0, 1f);
+                style.Colors[(int)ImGuiCol.ScrollbarBg] = new Vector4(0, 0, 0, 1f);
+                style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = new Vector4(255, 255, 255, 1f);
+                style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = new Vector4(200, 200, 200, 1f);
+                // Text , buttons, checkboxes
+                style.Colors[(int)ImGuiCol.Text] = new Vector4(255, 255, 255, 1f);
+                style.Colors[(int)ImGuiCol.Button] = new Vector4(255, 255, 255, 1f);
+                style.Colors[(int)ImGuiCol.ButtonHovered] = new Vector4(200, 200, 200, 0.6f);
+                style.Colors[(int)ImGuiCol.ButtonActive] = new Vector4(255, 0, 0, 0.5f);
+                style.Colors[(int)ImGuiCol.CheckMark] = new Vector4(255, 255, 255, 0.5f);
+                // Tabs
+                style.Colors[(int)ImGuiCol.Tab] = new Vector4(0, 0, 0, 1f);
+                style.Colors[(int)ImGuiCol.TabActive] = new Vector4(r, g, b, 1f);
+
+                // Creating the actual menu
+
+                ImGui.Begin("CS2 External Cheat - https://github.com/Zckyy", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
+
+                if (ImGui.BeginTabBar("Tabs"))
                 {
-                    ImGui.Text("ESP");
+                    if (ImGui.BeginTabItem("ESP"))
+                    {
+                        ImGui.Text("ESP");
 
-                    ImGui.Checkbox("Enable ESP", ref enableESP);
-                    ShowContextMenuTooltip("Toggles the Wallhacks");
-                    ImGui.Separator();
+                        ImGui.Checkbox("Enable ESP", ref enableESP);
+                        ShowContextMenuTooltip("Toggles the Wallhacks");
+                        ImGui.Separator();
 
-                    ImGui.Text("Team");
-                    
-                    ImGui.Checkbox("Enable Team Box", ref enableTeamBox);
-                    ImGui.Checkbox("Enable Team Distance (not working atm)", ref enableTeamDistance);
-                    ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
-                    ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
-                    ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
-                    ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
-                    ImGui.Separator();
+                        ImGui.Text("Team");
 
-                    ImGui.Text("Enemy");
+                        ImGui.Checkbox("Enable Team Box", ref enableTeamBox);
+                        ImGui.Checkbox("Enable Team Distance (not working atm)", ref enableTeamDistance);
+                        ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
+                        ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
+                        ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
+                        ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
+                        ImGui.Separator();
 
-                    ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
-                    ImGui.Checkbox("Enable Enemy Distance (not working atm)", ref enableEnemyDistance);
-                    ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
-                    ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
-                    ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
-                    ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
+                        ImGui.Text("Enemy");
 
-                    ImGui.EndTabItem();
+                        ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
+                        ImGui.Checkbox("Enable Enemy Distance (not working atm)", ref enableEnemyDistance);
+                        ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
+                        ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
+                        ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
+                        ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
+
+                        ImGui.EndTabItem();
+                    }
+
+                    if (ImGui.BeginTabItem("Colors"))
+                    {
+
+                        // team colors
+                        ImGui.Text("Team");
+
+                        ImGui.ColorPicker4("Team color", ref teamcolor);
+                        ImGui.Checkbox("Team Snap Line", ref enableTeamLine);
+                        ImGui.Checkbox("Team Box", ref enableTeamBox);
+                        ImGui.Checkbox("Team Dot", ref enableTeamDot);
+                        ImGui.Checkbox("Team Health Bar", ref enableTeamHealthBar);
+                        ImGui.Separator();
+
+                        // enemy colors
+                        ImGui.Text("Enemy");
+
+                        ImGui.ColorPicker4("Enemy color", ref enemycolor);
+                        ImGui.Checkbox("Enemy Snap Line", ref enableEnemyLine);
+                        ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
+                        ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
+                        ImGui.Checkbox("Enemy Health Bar", ref enableEnemyHealthBar);
+                        ImGui.Separator();
+
+                        ImGui.EndTabItem();
+
+                    }
+
+                    if (ImGui.BeginTabItem("Misc"))
+                    {
+                        ImGui.Checkbox("Killsitch (Closes the Cheat)", ref killswitch);
+
+                        ImGui.EndTabItem();
+                    }
+
+
+
+                    // End the tab bar.
+                    ImGui.EndTabBar();
                 }
 
-                if (ImGui.BeginTabItem("Colors"))
+                ImGui.End();
+            }
+            catch
+            {
+
+            }
+        }
+
+        void RGBUpdate()
+        {
+            const float step = 0.005f;
+
+            if (r == 1.0f && g >= 0.0f && b <= 0.0f)
+            {
+                g += step;
+                if (g > 1.0f)
                 {
-
-                    // team colors
-                    ImGui.Text("Team");
-
-                    ImGui.ColorPicker4("Team color", ref teamcolor);
-                    ImGui.Checkbox("Team Snap Line", ref enableTeamLine);
-                    ImGui.Checkbox("Team Box", ref enableTeamBox);
-                    ImGui.Checkbox("Team Dot", ref enableTeamDot);
-                    ImGui.Checkbox("Team Health Bar", ref enableTeamHealthBar);
-                    ImGui.Separator();
-
-                    // enemy colors
-                    ImGui.Text("Enemy");
-
-                    ImGui.ColorPicker4("Enemy color", ref enemycolor);
-                    ImGui.Checkbox("Enemy Snap Line", ref enableEnemyLine);
-                    ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
-                    ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
-                    ImGui.Checkbox("Enemy Health Bar", ref enableEnemyHealthBar);
-                    ImGui.Separator();
-
-                    ImGui.EndTabItem();
-
+                    g = 1.0f;
+                    r -= step;
                 }
-
-                /*if (ImGui.BeginTabItem("Aimboob (UNSAFE MAY CAUSE BANS)"))
+            }
+            else if (r <= 1.0f && g >= 1.0f && b == 0.0f)
+            {
+                r -= step;
+                if (r < 0.0f)
                 {
-                    // Disable the aimboob
-                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
-                    ImGui.Checkbox("Aimboob", ref enableAimbot);
-                    ImGui.PopStyleVar();
-
-                    ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
-                    ImGui.Checkbox("Closest To Crosshair", ref enableAimClosestToCrosshair);
-                    ImGui.PopStyleVar();
-
-                    ImGui.EndTabItem();
-                }*/
-
-                if (ImGui.BeginTabItem("Misc"))
-                {
-                    ImGui.Checkbox("Killsitch (Closes the Cheat)", ref killswitch);
-
-                    ImGui.EndTabItem();
+                    r = 0.0f;
+                    b += step;
                 }
-
-
-
-                // End the tab bar.
-                ImGui.EndTabBar();
+            }
+            else if (r <= 0.0f && g == 1.0f && b >= 0.0f)
+            {
+                b += step;
+                if (b > 1.0f)
+                {
+                    b = 1.0f;
+                    g -= step;
+                }
+            }
+            else if (r == 0.0f && g <= 1.0f && b >= 1.0f)
+            {
+                g -= step;
+                if (g < 0.0f)
+                {
+                    g = 0.0f;
+                    r += step;
+                }
+            }
+            else if (r >= 0.0f && g <= 0.0f && b == 1.0f)
+            {
+                r += step;
+                if (r > 1.0f)
+                {
+                    r = 1.0f;
+                    b -= step;
+                }
+            }
+            else if (r >= 1.0f && g >= 0.0f && b <= 1.0f)
+            {
+                b -= step;
+                if (b < 0.0f)
+                {
+                    b = 0.0f;
+                    g += step;
+                }
             }
 
-            ImGui.End();
+            Thread.Sleep(1);
         }
 
         public static void ShowContextMenuTooltip(string tooltipText)
@@ -414,7 +445,7 @@ namespace CS2EXTERNAL
             if (ImGui.IsItemHovered())
             {
                 ImGui.BeginTooltip();
-                ImGui.Text($"{tooltipText}");
+                ImGui.TextColored(new Vector4(255, 255, 255, 1),$"{tooltipText}");
                 ImGui.EndTooltip();
             }
         }
@@ -449,7 +480,7 @@ namespace CS2EXTERNAL
                 ReloadEntityList();
                 Thread.Sleep(1);
 
-                if (killswitch == true)
+                if (killswitch == true || GetAsyncKeyState(PANIC_KEY) > 0)
                 {
                     Environment.Exit(0);
                 }
@@ -457,20 +488,14 @@ namespace CS2EXTERNAL
                 if (GetAsyncKeyState(ESP_HOTKEY) > 0)
                 {
                     enableESP = !enableESP;
-                    Thread.Sleep(500);
+                    Thread.Sleep(80);
                 }
 
-                /*if (enableAimbot)
+                if (GetAsyncKeyState(MENU_HOTKEY) > 0)
                 {
-                    Aimbot();
-                }*/
-
-                // Debugging
-                //foreach (var entity in entityList) 
-                //{
-                //    Console.WriteLine(entity.origin);
-                //    Console.WriteLine(entity.health);
-                //}
+                    showWindow = !showWindow;
+                    Thread.Sleep(80);
+                }
             }
         }
 
