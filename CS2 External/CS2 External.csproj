@@ -9,6 +9,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>Notepad_23093.ico</ApplicationIcon>
+    <AssemblyName>Notepad</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +20,10 @@
       <VersionMajor>2</VersionMajor>
       <Guid>215d64d2-031c-33c7-96e3-61794cd1ee61</Guid>
     </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Notepad_23093.ico" />
   </ItemGroup>
 
   <ItemGroup>
