@@ -54,12 +54,7 @@ namespace CS2EXTERNAL
 
         IntPtr client;
 
-        // constants
-        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
-        private const int MOUSEEVENTF_LEFTUP = 0x04;
-
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
-        const int ESP_HOTKEY = 0x71; // F2 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
         const int TRIGGER_KEY = 0x05; // X1 mouse button Hotkey
 
@@ -88,20 +83,22 @@ namespace CS2EXTERNAL
         bool killswitch = false;
 
         bool enableESP = true;
-        //bool enableAimbot = false;
-        //bool enableAimClosestToCrosshair = false;
 
         bool enableTeamLine = false;
         bool enableTeamBox = true;
         bool enableTeamDot = true;
         bool enableTeamHealthBar = true;
-        bool enableTeamDistance = true;
+        bool enableTeamHealthBarText = true;
 
         bool enableEnemyLine = false;
         bool enableEnemyBox = true;
         bool enableEnemyDot = true;
         bool enableEnemyHealthBar = true;
-        bool enableEnemyDistance = true;
+        bool enableEnemyHealthBarText = true;
+
+        bool enableBhop = false;
+
+        float bhopSleep = 10f;
 
         bool IsAimingAtEnemy()
         {
@@ -150,11 +147,11 @@ namespace CS2EXTERNAL
                             {
                                 if (entity.teamNum == localPlayer.teamNum)
                                 {
-                                    DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamDistance);
+                                    DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamHealthBarText);
                                 }
                                 else
                                 {
-                                    DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyDistance);
+                                    DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyHealthBarText);
                                 }
                             }
                         }
@@ -167,7 +164,7 @@ namespace CS2EXTERNAL
             }
         }
 
-        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool distance)
+        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool healthBarText)
         {
             // check if 2d position is valid
             if (IsPixelInsideScreen(entity.originScreenPosition))
@@ -183,6 +180,7 @@ namespace CS2EXTERNAL
                 Vector2 boxWidth = new Vector2((entity.originScreenPosition.Y - entity.absScreenPosition.Y) / 2, 0f); // divide height by 2 simulate width
                 Vector2 boxStart = Vector2.Subtract(entity.absScreenPosition, boxWidth); // get top left corner of box
                 Vector2 boxEnd = Vector2.Add(entity.originScreenPosition, boxWidth); // get bottom right corner of box
+                Vector2 boxCenter = new Vector2((boxStart.X + boxEnd.X) / 2, (boxStart.Y + boxEnd.Y) / 2);
 
                 // Calculate health bar stuff
 
@@ -204,12 +202,15 @@ namespace CS2EXTERNAL
                 }
                 if (dot)
                 {
-                    drawList.AddCircleFilled(entity.originScreenPosition, 5, uintColor); // draw dot on entities
+                    drawList.AddCircleFilled((entity.originScreenPosition), 3, uintColor); // draw dot on entities
                 }
                 if (healthBar)
                 {
-                    drawList.AddText(healthBarStart, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
                     drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 3); // draw health bar
+                }
+                if (healthBarText)
+                {
+                    drawList.AddText(boxCenter, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
                 }
             }
 
@@ -309,12 +310,14 @@ namespace CS2EXTERNAL
                 style.Colors[(int)ImGuiCol.ScrollbarBg] = new Vector4(0, 0, 0, 1f);
                 style.Colors[(int)ImGuiCol.ScrollbarGrabHovered] = new Vector4(255, 255, 255, 1f);
                 style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = new Vector4(200, 200, 200, 1f);
-                // Text , buttons, checkboxes
+                // Text , buttons, checkboxes, sliders
                 style.Colors[(int)ImGuiCol.Text] = new Vector4(255, 255, 255, 1f);
                 style.Colors[(int)ImGuiCol.Button] = new Vector4(255, 255, 255, 1f);
                 style.Colors[(int)ImGuiCol.ButtonHovered] = new Vector4(200, 200, 200, 0.6f);
                 style.Colors[(int)ImGuiCol.ButtonActive] = new Vector4(255, 0, 0, 0.5f);
                 style.Colors[(int)ImGuiCol.CheckMark] = new Vector4(255, 255, 255, 0.5f);
+                style.Colors[(int)ImGuiCol.SliderGrab] = new Vector4(255, 255, 255, 0.5f);
+                style.Colors[(int)ImGuiCol.SliderGrabActive] = new Vector4(255, 255, 255, 0.5f);
                 // Tabs
                 style.Colors[(int)ImGuiCol.Tab] = new Vector4(0, 0, 0, 1f);
                 style.Colors[(int)ImGuiCol.TabActive] = new Vector4(r, g, b, 1f);
@@ -328,7 +331,6 @@ namespace CS2EXTERNAL
                     if (ImGui.BeginTabItem("ESP"))
                     {
                         ImGui.Text("ESP");
-                        ImGui.Text($"Name: {localPlayer.m_iszPlayerName}");
 
                         ImGui.Checkbox("Enable ESP", ref enableESP);
                         ShowContextMenuTooltip("Toggles the Wallhacks");
@@ -337,9 +339,9 @@ namespace CS2EXTERNAL
                         ImGui.Text("Team");
 
                         ImGui.Checkbox("Enable Team Box", ref enableTeamBox);
-                        ImGui.Checkbox("Enable Team Distance (not working atm)", ref enableTeamDistance);
                         ImGui.Checkbox("Enable Team Dot", ref enableTeamDot);
                         ImGui.Checkbox("Enable Team Health Bar", ref enableTeamHealthBar);
+                        ImGui.Checkbox("Enable Team Health Bar Text", ref enableTeamHealthBarText);
                         ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
                         ImGui.Separator();
@@ -347,9 +349,9 @@ namespace CS2EXTERNAL
                         ImGui.Text("Enemy");
 
                         ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
-                        ImGui.Checkbox("Enable Enemy Distance (not working atm)", ref enableEnemyDistance);
                         ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
                         ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
+                        ImGui.Checkbox("Enable Enemy Health Bar Text", ref enableTeamHealthBarText);
                         ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
 
@@ -383,14 +385,11 @@ namespace CS2EXTERNAL
 
                     }
 
-                    if (ImGui.BeginTabItem("Misc"))
+                    if (ImGui.BeginTabItem("Debug"))
                     {
-                        ImGui.Checkbox("Killsitch (Closes the Cheat)", ref killswitch);
-
+                        ImGui.Text($"Grounded?: {localPlayer.m_bOnGroundLastTick}");
                         ImGui.EndTabItem();
                     }
-
-
 
                     // End the tab bar.
                     ImGui.EndTabBar();
@@ -510,18 +509,11 @@ namespace CS2EXTERNAL
                 if (IsAimingAtEnemy() & GetAsyncKeyState(TRIGGER_KEY) > 1)
                 {
                     LeftClick((int)windowCenter.X, (int)windowCenter.Y);
-                    Thread.Sleep(40);
                 }
 
                 if (killswitch == true || GetAsyncKeyState(PANIC_KEY) > 0)
                 {
                     Environment.Exit(0);
-                }
-
-                if (GetAsyncKeyState(ESP_HOTKEY) > 0)
-                {
-                    enableESP = !enableESP;
-                    LeftClick((int)windowCenter.X, (int)windowCenter.Y);
                 }
 
                 if (GetAsyncKeyState(MENU_HOTKEY) > 0)
@@ -555,6 +547,42 @@ namespace CS2EXTERNAL
                 enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
             }*/
         }
+
+        //void UpdateEntities()
+        //{
+        //    try
+        //    {
+        //        IntPtr entity_list = swed.ReadPointer(client, OffsetsDumped.client_dll.dwEntityList);
+        //        IntPtr list_entry;
+
+        //        for (int i = 0; i < 64; i++)
+        //        {
+        //            list_entry = swed.ReadPointer(entity_list + (8 * (i & 0x7FFF) >> 9) + 16);
+
+        //            IntPtr player = swed.ReadPointer(list_entry + 120 * (i & 0x1FF));
+        //            int playerPawn = swed.ReadInt(player, (int)Client.CCSPlayerController.m_hPlayerPawn); // CCSPlayerController
+
+        //            IntPtr list_entry2 = swed.ReadPointer(entity_list + 0x8 * ((playerPawn & 0x7FFF) >> 9) + 16);
+        //            IntPtr pCSPlayerPawn = swed.ReadPointer(list_entry2 + 0x120 * (playerPawn & 0x1FF)); // C_CSPlayerPawn
+
+        //            IntPtr entityAddress = pCSPlayerPawn;
+
+        //            if (entityAddress == IntPtr.Zero)
+        //            {
+        //                continue;
+        //            }
+
+        //            Entity entity = new Entity();
+        //            entity.address = entityAddress;
+
+        //            UpdateEntity(entity);
+        //        }
+        //    }
+        //    catch
+        //    {
+
+        //    }
+        //}
 
         void updateEntityList() // handle all other entities here
         {
@@ -608,11 +636,11 @@ namespace CS2EXTERNAL
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
             // 1d
-            entity.m_iszPlayerName = swed.ReadString(localPlayer.address + Offsets.m_iszPlayerName, 128);
             entity.health = swed.ReadInt(entity.address, offsets.health);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
+            entity.m_bOnGroundLastTick = swed.ReadBool(entity.address, offsets.m_bOnGroundLastTick);
         }
 
         static void Main(string[] args)
