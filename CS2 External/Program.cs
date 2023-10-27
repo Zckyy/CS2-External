@@ -96,15 +96,13 @@ namespace CS2EXTERNAL
         bool enableEnemyHealthBar = true;
         bool enableEnemyHealthBarText = true;
 
-        bool enableBhop = false;
-
-        float bhopSleep = 10f;
+        bool isTriggerEnabled = true;
 
         bool IsAimingAtEnemy()
         {
-            if (localPlayer.m_iIDEntIndex > -1)
+            if (localPlayer.m_iIDEntIndex > -1 && GetAsyncKeyState(TRIGGER_KEY) > 0)
             {
-                return true;
+                LeftClick((int)windowCenter.X, (int)windowCenter.Y);
             }
 
             return false;
@@ -121,7 +119,7 @@ namespace CS2EXTERNAL
         {
             // only render stuff here
 
-            if (!showWindow)
+            while (!showWindow)
             {
                 DrawMenu();
             }
@@ -210,7 +208,7 @@ namespace CS2EXTERNAL
                 }
                 if (healthBarText)
                 {
-                    drawList.AddText(boxCenter, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
+                    drawList.AddText(entity.originScreenPosition, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
                 }
             }
 
@@ -365,24 +363,21 @@ namespace CS2EXTERNAL
                         ImGui.Text("Team");
 
                         ImGui.ColorPicker4("Team color", ref teamcolor);
-                        ImGui.Checkbox("Team Snap Line", ref enableTeamLine);
-                        ImGui.Checkbox("Team Box", ref enableTeamBox);
-                        ImGui.Checkbox("Team Dot", ref enableTeamDot);
-                        ImGui.Checkbox("Team Health Bar", ref enableTeamHealthBar);
                         ImGui.Separator();
 
                         // enemy colors
                         ImGui.Text("Enemy");
 
                         ImGui.ColorPicker4("Enemy color", ref enemycolor);
-                        ImGui.Checkbox("Enemy Snap Line", ref enableEnemyLine);
-                        ImGui.Checkbox("Enemy Box", ref enableEnemyBox);
-                        ImGui.Checkbox("Enemy Dot", ref enableEnemyDot);
-                        ImGui.Checkbox("Enemy Health Bar", ref enableEnemyHealthBar);
-                        ImGui.Separator();
 
                         ImGui.EndTabItem();
 
+                    }
+
+                    if (ImGui.BeginTabItem("Trigger"))
+                    {
+                        ImGui.Checkbox("Trigger Bot", ref isTriggerEnabled);
+                        ImGui.EndTabItem();
                     }
 
                     if (ImGui.BeginTabItem("Debug"))
@@ -506,9 +501,9 @@ namespace CS2EXTERNAL
                 ReloadEntityList();
                 Thread.Sleep(1);
 
-                if (IsAimingAtEnemy() & GetAsyncKeyState(TRIGGER_KEY) > 1)
+                if (isTriggerEnabled)
                 {
-                    LeftClick((int)windowCenter.X, (int)windowCenter.Y);
+                    IsAimingAtEnemy();
                 }
 
                 if (killswitch == true || GetAsyncKeyState(PANIC_KEY) > 0)
