@@ -74,11 +74,7 @@ namespace CS2EXTERNAL
 
         // ImGui checkboxes and stuff
 
-        bool showWindow = true;
-
-        float r = 1.0f;
-        float g = 1.0f;
-        float b = 1.0f;
+        bool showMenu = true;
 
         bool killswitch = false;
 
@@ -119,7 +115,7 @@ namespace CS2EXTERNAL
         {
             // only render stuff here
 
-            while (!showWindow)
+            if (showMenu)
             {
                 DrawMenu();
             }
@@ -292,16 +288,15 @@ namespace CS2EXTERNAL
             try
             {
                 // Styling
-                RGBUpdate();
                 ImGuiStylePtr style = ImGui.GetStyle();
                 ImGuiIOPtr io = ImGui.GetIO();
 
-                style.WindowRounding = 5f;
+                style.WindowRounding = 6f;
                 style.WindowBorderSize = 3f;
                 style.WindowMinSize = new Vector2(700, 700);
 
                 // Background and border
-                style.Colors[(int)ImGuiCol.Border] = new Vector4(r, b, g, 0.5f);
+                style.Colors[(int)ImGuiCol.Border] = new Vector4(0, 0, 0, 0.5f);
                 style.Colors[(int)ImGuiCol.WindowBg] = new Vector4(0, 0, 0, 1f);
                 style.Colors[(int)ImGuiCol.FrameBg] = new Vector4(0, 0, 0, 1f);
                 style.Colors[(int)ImGuiCol.TitleBgActive] = new Vector4(0, 0, 0, 1f);
@@ -318,7 +313,8 @@ namespace CS2EXTERNAL
                 style.Colors[(int)ImGuiCol.SliderGrabActive] = new Vector4(255, 255, 255, 0.5f);
                 // Tabs
                 style.Colors[(int)ImGuiCol.Tab] = new Vector4(0, 0, 0, 1f);
-                style.Colors[(int)ImGuiCol.TabActive] = new Vector4(r, g, b, 1f);
+                style.Colors[(int)ImGuiCol.TabActive] = new Vector4(0, 255, 0, 1f);
+                style.Colors[(int)ImGuiCol.TabHovered] = new Vector4(0, 255, 0, 0.5f);
 
                 // Creating the actual menu
 
@@ -398,68 +394,6 @@ namespace CS2EXTERNAL
             }
         }
 
-        void RGBUpdate()
-        {
-            const float step = 0.005f;
-
-            if (r == 1.0f && g >= 0.0f && b <= 0.0f)
-            {
-                g += step;
-                if (g > 1.0f)
-                {
-                    g = 1.0f;
-                    r -= step;
-                }
-            }
-            else if (r <= 1.0f && g >= 1.0f && b == 0.0f)
-            {
-                r -= step;
-                if (r < 0.0f)
-                {
-                    r = 0.0f;
-                    b += step;
-                }
-            }
-            else if (r <= 0.0f && g == 1.0f && b >= 0.0f)
-            {
-                b += step;
-                if (b > 1.0f)
-                {
-                    b = 1.0f;
-                    g -= step;
-                }
-            }
-            else if (r == 0.0f && g <= 1.0f && b >= 1.0f)
-            {
-                g -= step;
-                if (g < 0.0f)
-                {
-                    g = 0.0f;
-                    r += step;
-                }
-            }
-            else if (r >= 0.0f && g <= 0.0f && b == 1.0f)
-            {
-                r += step;
-                if (r > 1.0f)
-                {
-                    r = 1.0f;
-                    b -= step;
-                }
-            }
-            else if (r >= 1.0f && g >= 0.0f && b <= 1.0f)
-            {
-                b -= step;
-                if (b < 0.0f)
-                {
-                    b = 0.0f;
-                    g += step;
-                }
-            }
-
-            Thread.Sleep(1);
-        }
-
         public static void ShowContextMenuTooltip(string tooltipText)
         {
             if (ImGui.IsItemHovered())
@@ -513,7 +447,7 @@ namespace CS2EXTERNAL
 
                 if (GetAsyncKeyState(MENU_HOTKEY) > 0)
                 {
-                    showWindow = !showWindow;
+                    showMenu = !showMenu;
                     Thread.Sleep(80);
                 }
             }
@@ -542,42 +476,6 @@ namespace CS2EXTERNAL
                 enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
             }*/
         }
-
-        //void UpdateEntities()
-        //{
-        //    try
-        //    {
-        //        IntPtr entity_list = swed.ReadPointer(client, OffsetsDumped.client_dll.dwEntityList);
-        //        IntPtr list_entry;
-
-        //        for (int i = 0; i < 64; i++)
-        //        {
-        //            list_entry = swed.ReadPointer(entity_list + (8 * (i & 0x7FFF) >> 9) + 16);
-
-        //            IntPtr player = swed.ReadPointer(list_entry + 120 * (i & 0x1FF));
-        //            int playerPawn = swed.ReadInt(player, (int)Client.CCSPlayerController.m_hPlayerPawn); // CCSPlayerController
-
-        //            IntPtr list_entry2 = swed.ReadPointer(entity_list + 0x8 * ((playerPawn & 0x7FFF) >> 9) + 16);
-        //            IntPtr pCSPlayerPawn = swed.ReadPointer(list_entry2 + 0x120 * (playerPawn & 0x1FF)); // C_CSPlayerPawn
-
-        //            IntPtr entityAddress = pCSPlayerPawn;
-
-        //            if (entityAddress == IntPtr.Zero)
-        //            {
-        //                continue;
-        //            }
-
-        //            Entity entity = new Entity();
-        //            entity.address = entityAddress;
-
-        //            UpdateEntity(entity);
-        //        }
-        //    }
-        //    catch
-        //    {
-
-        //    }
-        //}
 
         void updateEntityList() // handle all other entities here
         {
