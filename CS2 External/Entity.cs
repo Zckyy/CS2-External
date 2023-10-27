@@ -10,6 +10,7 @@ namespace CS2_External_Cheat
     public class Entity
     {
         public IntPtr address { get; set; }
+        public string m_iszPlayerName { get; set; }
         public int health { get; set; }
         public int teamNum { get; set; }
         public int jumpFlag { get; set; }

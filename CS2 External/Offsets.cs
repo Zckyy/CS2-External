@@ -20,6 +20,7 @@ namespace CS2_External_Cheat
 
         // entity attributes
         public int teamNum = 0x3BF;
+        public const int m_iszPlayerName = 0x610;
         public int jumpFlag = 0x3c8;
         public int health = 0x32c;
         public int origin = 0xCD8;

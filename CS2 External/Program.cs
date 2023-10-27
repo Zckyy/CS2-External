@@ -328,7 +328,7 @@ namespace CS2EXTERNAL
                     if (ImGui.BeginTabItem("ESP"))
                     {
                         ImGui.Text("ESP");
-                        ImGui.Text($"{localPlayer.dwPlantedC4}");
+                        ImGui.Text($"Name: {localPlayer.m_iszPlayerName}");
 
                         ImGui.Checkbox("Enable ESP", ref enableESP);
                         ShowContextMenuTooltip("Toggles the Wallhacks");
@@ -608,12 +608,11 @@ namespace CS2EXTERNAL
             entity.absScreenPosition = Vector2.Add(WorldToScreen(currentViewmatrix, entity.abs, (int)windowSize.X, (int)windowSize.Y), windowLocation);
 
             // 1d
+            entity.m_iszPlayerName = swed.ReadString(localPlayer.address + Offsets.m_iszPlayerName, 128);
             entity.health = swed.ReadInt(entity.address, offsets.health);
             entity.teamNum = swed.ReadInt(entity.address, offsets.teamNum);
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
-            entity.dwGameRules = swed.ReadInt(entity.address, offsets.dwGameRules);
-            entity.dwPlantedC4 = swed.ReadBool(entity.address, offsets.dwPlantedC4 + entity.dwGameRules);
         }
 
         static void Main(string[] args)
