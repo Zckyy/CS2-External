@@ -408,7 +408,7 @@ namespace CS2EXTERNAL
         {
             ImGui.SetNextWindowSize(windowSize);
             ImGui.SetNextWindowPos(windowLocation);
-            ImGui.Begin("Overlay", ImGuiWindowFlags.NoDecoration
+            ImGui.Begin("Notepad", ImGuiWindowFlags.NoDecoration
                 | ImGuiWindowFlags.NoBackground
                 | ImGuiWindowFlags.NoMove
                 | ImGuiWindowFlags.NoInputs
@@ -428,7 +428,6 @@ namespace CS2EXTERNAL
             windowCenter = new Vector2(lineOrigin.X, window.bottom - windowSize.Y / 2);
 
             client = swed.GetModuleBase("client.dll");
-
 
             while (true) // Always run
             {
