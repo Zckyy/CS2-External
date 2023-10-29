@@ -5,7 +5,9 @@ using System.Numerics;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 using CS2_External;
+using KeyAuth;
 using System.Windows.Forms;
+using Vortice.Direct3D11on12;
 
 namespace CS2EXTERNAL
 {
@@ -537,7 +539,7 @@ namespace CS2EXTERNAL
 
         static void Main(string[] args)
         {
-            // run logic methods and more
+            AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();
