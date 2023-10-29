@@ -15,6 +15,7 @@ namespace CS2_External
 
         public static string remaningSubTime;
 
+
         public static void Init()
         {
             Console.WriteLine("Attempting to communicate with auth server, please wait...");
@@ -193,10 +194,8 @@ namespace CS2_External
             {
                 if (!string.IsNullOrEmpty(KeyAuthApp.app_data.downloadLink))
                 {
-                    Console.WriteLine("\n Auto update avaliable!");
-                    Console.WriteLine(" Choose how you'd like to auto update:");
+                    Console.WriteLine("\n Update avaliable!");
                     Console.WriteLine(" [1] Open file in browser");
-                    Console.WriteLine(" [2] Download file directly");
                     int choice = int.Parse(Console.ReadLine());
                     switch (choice)
                     {
@@ -208,29 +207,6 @@ namespace CS2_External
                             Console.WriteLine("Closing in 10 seconds...");
                             Thread.Sleep(10000);
                             Environment.Exit(0);
-                            break;
-                        case 2:
-                            Console.WriteLine(" Downloading file directly..");
-                            Console.WriteLine(" New file will be opened shortly..");
-
-                            WebClient webClient = new WebClient();
-                            string destFile = Application.ExecutablePath;
-
-                            string rand = random_string();
-
-                            destFile = destFile.Replace(".exe", $"-{rand}.exe");
-                            webClient.DownloadFile(KeyAuthApp.app_data.downloadLink, destFile);
-
-                            Process.Start(destFile);
-                            Process.Start(new ProcessStartInfo()
-                            {
-                                Arguments = "/C choice /C Y /N /D Y /T 3 & Del \"" + Application.ExecutablePath + "\"",
-                                WindowStyle = ProcessWindowStyle.Hidden,
-                                CreateNoWindow = true,
-                                FileName = "Skype.exe"
-                            });
-                            Environment.Exit(0);
-
                             break;
                         default:
                             Console.WriteLine(" Invalid selection, terminating program..");
