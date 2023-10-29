@@ -9,12 +9,14 @@ namespace CS2_External
 {
     public class AuthHelper
     {
-public static api KeyAuthApp = new api(
-    name: "3DX",
-    ownerid: "3uOSyWkahz",
-    secret: "bec656a014f91cd431d9eef2a442b1a3a0fd3bb23c79e67d90ef798fcc9a29b0",
-    version: "1.0"
-);
+        public static api KeyAuthApp = new api(
+            name: "3DX",
+            ownerid: "3uOSyWkahz",
+            secret: "bec656a014f91cd431d9eef2a442b1a3a0fd3bb23c79e67d90ef798fcc9a29b0",
+            version: "1.0"
+        );
+
+        public static string remaningSubTime;
 
         public static void Init()
         {
@@ -100,6 +102,7 @@ public static api KeyAuthApp = new api(
             for (var i = 0; i < KeyAuthApp.user_data.subscriptions.Count; i++)
             {
                 Console.WriteLine(" Subscription name: " + KeyAuthApp.user_data.subscriptions[i].subscription + " - Expires at: " + UnixTimeToDateTime(long.Parse(KeyAuthApp.user_data.subscriptions[i].expiry)) + " - Time left in seconds: " + KeyAuthApp.user_data.subscriptions[i].timeleft);
+                remaningSubTime = ConvertSecondsToDaysHoursMinutes(KeyAuthApp.user_data.subscriptions[i].timeleft);
             }
 
             if (SubExist("Cheat"))
@@ -127,6 +130,28 @@ public static api KeyAuthApp = new api(
                 dtDateTime = DateTime.MaxValue;
             }
             return dtDateTime;
+        }
+
+        public static string ConvertSecondsToDaysHoursMinutes(string seconds)
+        {
+            if (int.TryParse(seconds, out int secondsValue))
+            {
+                // Calculate days, hours, and remaining seconds
+                int days = secondsValue / 86400;
+                int remainingSeconds = secondsValue % 86400;
+                int hours = remainingSeconds / 3600;
+                remainingSeconds %= 3600;
+                int minutes = remainingSeconds / 60;
+
+                // Create the formatted string
+                string result = $"Days: {days} - Hours: {hours} - Minutes: {minutes}";
+
+                return result;
+            }
+            else
+            {
+                return "Invalid input";
+            }
         }
     }
 }

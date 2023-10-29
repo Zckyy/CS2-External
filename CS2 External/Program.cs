@@ -328,7 +328,7 @@ namespace CS2EXTERNAL
 
                 // Creating the actual menu
 
-                ImGui.Begin("CS2 External Cheat", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
+                ImGui.Begin($"3DX - Remaining Subscription time -> ${AuthHelper.remaningSubTime}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
 
                 if (ImGui.BeginTabBar("Tabs"))
                 {
@@ -512,19 +512,6 @@ namespace CS2EXTERNAL
             localPlayer.address = swed.ReadPointer(client, offsets.localPlayer); // set the address so we can update it later
             UpdateEntity(localPlayer);
             updateEntityList();
-
-            // check if enableAimClosestToCrosshair is enabled
-            /*if (enableAimClosestToCrosshair)
-            {
-                if (enemyTeam.Count > 0)
-                {
-                    enemyTeam = enemyTeam.OrderBy(x => x.angleDifference).ToList(); // sort the list by angle difference
-                }
-            }
-            else
-            {
-                enemyTeam = enemyTeam.OrderBy(x => x.magnitude).ToList(); // sort the list by distance
-            }*/
         }
 
         void updateEntityList() // handle all other entities here
@@ -588,7 +575,7 @@ namespace CS2EXTERNAL
 
         static void Main(string[] args)
         {
-            //AuthHelper.Init();
+            AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();
