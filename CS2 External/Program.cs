@@ -2,13 +2,9 @@
 using CS2_External_Cheat;
 using Swed64;
 using System.Numerics;
-using System.IO;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 using CS2_External;
-using KeyAuth;
-using System.Windows.Forms;
-using Vortice.Direct3D11on12;
 
 namespace CS2EXTERNAL
 {
@@ -418,6 +414,7 @@ namespace CS2EXTERNAL
                     if (ImGui.BeginTabItem("Debug"))
                     {
                         ImGui.Text($"Grounded?: {localPlayer.m_bOnGroundLastTick}");
+                        ImGui.Text($"m_iIDEntIndex: {localPlayer.m_iIDEntIndex}");
                         ImGui.EndTabItem();
                     }
 
@@ -498,7 +495,7 @@ namespace CS2EXTERNAL
                 if (GetAsyncKeyState(MENU_HOTKEY) > 0)
                 {
                     showMenu = !showMenu;
-                    Thread.Sleep(80);
+                    Thread.Sleep(160);
                 }
             }
         }

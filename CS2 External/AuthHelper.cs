@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Net;
 using KeyAuth;
 
 namespace CS2_External
@@ -13,7 +10,7 @@ namespace CS2_External
             name: "3DX",
             ownerid: "3uOSyWkahz",
             secret: "bec656a014f91cd431d9eef2a442b1a3a0fd3bb23c79e67d90ef798fcc9a29b0",
-            version: "1.0"
+            version: "1.0.1"
         );
 
         public static string remaningSubTime;
@@ -22,6 +19,7 @@ namespace CS2_External
         {
             Console.WriteLine("Attempting to communicate with auth server, please wait...");
             KeyAuthApp.init();
+            autoUpdate();
 
             if (!KeyAuthApp.response.success)
             {
@@ -67,9 +65,9 @@ namespace CS2_External
                 case 3:
                     Console.Write("\n\n Enter username: ");
                     username = Console.ReadLine();
-                    Console.Write("\n\n Enter email: ");
-                    email = Console.ReadLine();
-                    KeyAuthApp.forgot(username, email);
+                    Console.Write("\n\n Enter license: ");
+                    key = Console.ReadLine();
+                    KeyAuthApp.upgrade(username, key);
                     // don't proceed to app, user hasn't authenticated yet.
                     Console.WriteLine("\n Status: " + KeyAuthApp.response.message);
                     Thread.Sleep(2500);
@@ -89,7 +87,10 @@ namespace CS2_External
                 Environment.Exit(0);
             }
 
+            Console.Clear();
+
             Console.WriteLine("\n Logged In!"); // at this point, the client has been authenticated. Put the code you want to run after here
+
 
             // user data
             Console.WriteLine("\n User data:");
@@ -101,9 +102,11 @@ namespace CS2_External
             Console.WriteLine(" Your subscription(s):");
             for (var i = 0; i < KeyAuthApp.user_data.subscriptions.Count; i++)
             {
-                Console.WriteLine(" Subscription name: " + KeyAuthApp.user_data.subscriptions[i].subscription + " - Expires at: " + UnixTimeToDateTime(long.Parse(KeyAuthApp.user_data.subscriptions[i].expiry)) + " - Time left in seconds: " + KeyAuthApp.user_data.subscriptions[i].timeleft);
                 remaningSubTime = ConvertSecondsToDaysHoursMinutes(KeyAuthApp.user_data.subscriptions[i].timeleft);
+                Console.WriteLine($" {KeyAuthApp.user_data.subscriptions[i].subscription} - {remaningSubTime}");
             }
+
+            Console.WriteLine(KeyAuthApp.app_data.downloadLink);
 
             if (SubExist("Cheat"))
             {
@@ -111,14 +114,14 @@ namespace CS2_External
             }
         }
 
-        public static bool SubExist(string name)
+        static bool SubExist(string name)
         {
             if (KeyAuthApp.user_data.subscriptions.Exists(x => x.subscription == name))
                 return true;
             return false;
         }
 
-        public static DateTime UnixTimeToDateTime(long unixtime)
+        static DateTime UnixTimeToDateTime(long unixtime)
         {
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Local);
             try
@@ -132,7 +135,7 @@ namespace CS2_External
             return dtDateTime;
         }
 
-        public static string ConvertSecondsToDaysHoursMinutes(string seconds)
+        static string ConvertSecondsToDaysHoursMinutes(string seconds)
         {
             if (int.TryParse(seconds, out int secondsValue))
             {
@@ -151,6 +154,94 @@ namespace CS2_External
             else
             {
                 return "Invalid input";
+            }
+        }
+
+        static string random_string()
+        {
+            string str = null;
+
+            Random random = new Random();
+            for (int i = 0; i < 5; i++)
+            {
+                str += Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65))).ToString();
+            }
+            return str;
+        }
+
+        static void OpenUrlInDefaultBrowser(string url)
+        {
+            try
+            {
+                // Use the default system browser to open the URL
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Handle any exceptions that may occur
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
+        }
+
+        static void autoUpdate()
+        {
+            if (KeyAuthApp.response.message == "invalidver")
+            {
+                if (!string.IsNullOrEmpty(KeyAuthApp.app_data.downloadLink))
+                {
+                    Console.WriteLine("\n Auto update avaliable!");
+                    Console.WriteLine(" Choose how you'd like to auto update:");
+                    Console.WriteLine(" [1] Open file in browser");
+                    Console.WriteLine(" [2] Download file directly");
+                    int choice = int.Parse(Console.ReadLine());
+                    switch (choice)
+                    {
+                        case 1:
+                            OpenUrlInDefaultBrowser($"{KeyAuthApp.app_data.downloadLink}");
+                            Console.Clear();
+                            Console.WriteLine("Starting download.");
+                            Console.WriteLine("Please extract the zip into a folder and run the new executable");
+                            Console.WriteLine("Closing in 10 seconds...");
+                            Thread.Sleep(10000);
+                            Environment.Exit(0);
+                            break;
+                        case 2:
+                            Console.WriteLine(" Downloading file directly..");
+                            Console.WriteLine(" New file will be opened shortly..");
+
+                            WebClient webClient = new WebClient();
+                            string destFile = Application.ExecutablePath;
+
+                            string rand = random_string();
+
+                            destFile = destFile.Replace(".exe", $"-{rand}.exe");
+                            webClient.DownloadFile(KeyAuthApp.app_data.downloadLink, destFile);
+
+                            Process.Start(destFile);
+                            Process.Start(new ProcessStartInfo()
+                            {
+                                Arguments = "/C choice /C Y /N /D Y /T 3 & Del \"" + Application.ExecutablePath + "\"",
+                                WindowStyle = ProcessWindowStyle.Hidden,
+                                CreateNoWindow = true,
+                                FileName = "Skype.exe"
+                            });
+                            Environment.Exit(0);
+
+                            break;
+                        default:
+                            Console.WriteLine(" Invalid selection, terminating program..");
+                            Thread.Sleep(1500);
+                            Environment.Exit(0);
+                            break;
+                    }
+                }
+                Console.WriteLine("\n Status: Version of this program does not match the one online. Furthermore, the download link online isn't set. You will need to manually obtain the download link from the developer.");
+                Thread.Sleep(2500);
+                Environment.Exit(0);
             }
         }
     }
