@@ -456,7 +456,7 @@ namespace CS2EXTERNAL
         {
             ImGui.SetNextWindowSize(windowSize);
             ImGui.SetNextWindowPos(windowLocation);
-            ImGui.Begin("Notepad", ImGuiWindowFlags.NoDecoration
+            ImGui.Begin("Overlay", ImGuiWindowFlags.NoDecoration
                 | ImGuiWindowFlags.NoBackground
                 | ImGuiWindowFlags.NoMove
                 | ImGuiWindowFlags.NoInputs
