@@ -2,6 +2,7 @@
 using CS2_External_Cheat;
 using Swed64;
 using System.Numerics;
+using System.IO;
 using ImGuiNET;
 using System.Runtime.InteropServices;
 using CS2_External;
@@ -58,7 +59,7 @@ namespace CS2EXTERNAL
 
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
-        const int TRIGGER_KEY = 0x05; // X1 mouse button Hotkey
+        static int TRIGGER_KEY = 0x05;// X1 mouse button Hotkey
 
         // ImGui stuff
 
@@ -95,6 +96,12 @@ namespace CS2EXTERNAL
         bool enableEnemyHealthBarText = true;
 
         bool isTriggerEnabled = true;
+
+        //Hotkey assign in menu
+        static string inputText = "";
+        static bool isButtonPress = false;
+        static bool captureInput = false;
+        static int captureKey = -1;
 
         bool IsAimingAtEnemy()
         {
@@ -176,7 +183,8 @@ namespace CS2EXTERNAL
                 Vector2 boxWidth = new Vector2((entity.originScreenPosition.Y - entity.absScreenPosition.Y) / 2, 0f); // divide height by 2 simulate width
                 Vector2 boxStart = Vector2.Subtract(entity.absScreenPosition, boxWidth); // get top left corner of box
                 Vector2 boxEnd = Vector2.Add(entity.originScreenPosition, boxWidth); // get bottom right corner of box
-                Vector2 boxCenter = new Vector2((boxStart.X + boxEnd.X) / 2, (boxStart.Y + boxEnd.Y) / 2);
+                Vector2 boxCenter = new Vector2((boxStart.X + boxEnd.X) / 2, ((boxStart.Y + boxEnd.Y) / 2));
+                Vector2 boxUpperUpperCenter = new Vector2((boxStart.X + boxEnd.X) / 2, boxStart.Y + (boxEnd.Y - boxStart.Y) / 8);
 
                 // Calculate health bar stuff
 
@@ -198,7 +206,7 @@ namespace CS2EXTERNAL
                 }
                 if (dot)
                 {
-                    drawList.AddCircleFilled((entity.originScreenPosition), 3, uintColor); // draw dot on entities
+                    drawList.AddCircleFilled(boxUpperUpperCenter, 3, uintColor); // draw dot on entities
                 }
                 if (healthBar)
                 {
@@ -307,7 +315,7 @@ namespace CS2EXTERNAL
                 style.Colors[(int)ImGuiCol.ScrollbarGrabActive] = new Vector4(200, 200, 200, 1f);
                 // Text , buttons, checkboxes, sliders
                 style.Colors[(int)ImGuiCol.Text] = new Vector4(255, 255, 255, 1f);
-                style.Colors[(int)ImGuiCol.Button] = new Vector4(255, 255, 255, 1f);
+                style.Colors[(int)ImGuiCol.Button] = new Vector4(0, 255, 0, 1f);
                 style.Colors[(int)ImGuiCol.ButtonHovered] = new Vector4(200, 200, 200, 0.6f);
                 style.Colors[(int)ImGuiCol.ButtonActive] = new Vector4(255, 0, 0, 0.5f);
                 style.Colors[(int)ImGuiCol.CheckMark] = new Vector4(255, 255, 255, 0.5f);
@@ -320,7 +328,7 @@ namespace CS2EXTERNAL
 
                 // Creating the actual menu
 
-                ImGui.Begin("CS2 External Cheat - https://github.com/Zckyy", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
+                ImGui.Begin("CS2 External Cheat", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
 
                 if (ImGui.BeginTabBar("Tabs"))
                 {
@@ -376,6 +384,35 @@ namespace CS2EXTERNAL
                     {
                         ImGui.Checkbox("Trigger Bot", ref isTriggerEnabled);
                         ImGui.EndTabItem();
+
+                        if (ImGui.Button("Trigger Hotkey"))
+                        {
+                            isButtonPress = true;
+                            captureInput = true;
+                            inputText = "";
+                            captureKey = -1;
+                        }
+
+                        if (isButtonPress)
+                        {
+                            if (captureInput)
+                            {
+                                ImGui.Text("Press any Key... ");
+                            }
+                            else 
+                            {
+                                if (captureKey != 1)
+                                {
+                                    string captureKeyName = Enum.GetName(typeof(CheatHelper.VirtualKeys), TRIGGER_KEY);
+
+                                    ImGui.Text($"Hotkey Input: {captureKeyName}");
+                                }
+                                else
+                                {
+                                    ImGui.Text($"Hotkey Input: None");
+                                }
+                            }
+                        }
                     }
 
                     if (ImGui.BeginTabItem("Debug"))
@@ -386,6 +423,18 @@ namespace CS2EXTERNAL
 
                     // End the tab bar.
                     ImGui.EndTabBar();
+                }
+
+                if (isButtonPress && captureInput)
+                {
+                    for (int key = 0; key < 256; key++)
+                    {
+                        if ((GetAsyncKeyState(key) & 0x8000) != 0)
+                        {
+                            TRIGGER_KEY = key;
+                            captureInput = false;
+                        }
+                    }
                 }
 
                 ImGui.End();
@@ -539,7 +588,7 @@ namespace CS2EXTERNAL
 
         static void Main(string[] args)
         {
-            AuthHelper.Init();
+            //AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();
