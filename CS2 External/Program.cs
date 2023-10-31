@@ -86,7 +86,7 @@ namespace CS2EXTERNAL
         bool enableTeamDot = false;
         bool enableTeamHealthBar = false;
         bool enableTeamHealthBarText = false;
-        bool enableTeamBoxFill = true;
+        bool enableTeamBoxFill = false;
 
         bool enableEnemyLine = true;
         bool enableEnemyBox = true;
