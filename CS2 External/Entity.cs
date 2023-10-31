@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CS2_External;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -16,7 +17,6 @@ namespace CS2_External_Cheat
         public int jumpFlag { get; set; }
         public int m_iIDEntIndex { get; set; }
         public int dwGameRules { get; set; }
-        public bool dwPlantedC4 { get; set; }
         public Vector3 origin { get; set; }
         public Vector3 abs { get; set; }
         public Vector3 viewOffset { get; set; }

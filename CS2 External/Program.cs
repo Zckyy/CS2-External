@@ -52,6 +52,8 @@ namespace CS2EXTERNAL
         List<Entity> playerTeam = new List<Entity>();
 
         IntPtr client;
+        float gameTime;
+        bool isBombPlanted;
 
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
@@ -60,7 +62,7 @@ namespace CS2EXTERNAL
         // ImGui stuff
 
         Vector4 teamBoxColor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
-        Vector4 lineColor = new Vector4(1, 1, 1, 1);
+        Vector4 lineColor = new Vector4(1, (float)0.65, 0, (float)0.5);
         Vector4 enemyBoxColor = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
         Vector4 healthBarcolor = new Vector4(0, 1, 0, 1); // RGBA, Green healthbar
         Vector4 healthBarTextcolor = new Vector4(0, 0, 0, 1); // RGBA, black text
@@ -93,7 +95,7 @@ namespace CS2EXTERNAL
         bool enableEnemyDot = true;
         bool enableEnemyHealthBar = true;
         bool enableEnemyHealthBarText = true;
-        bool enableEnemyBoxFill = true;
+        bool enableEnemyBoxFill = false;
 
         bool isTriggerEnabled = true;
 
@@ -182,19 +184,20 @@ namespace CS2EXTERNAL
 
                 // Calculate box attributes
 
-                Vector2 boxWidth = new Vector2((entity.originScreenPosition.Y - entity.absScreenPosition.Y) / 2, 0f); // divide height by 2 simulate width
+                Vector2 boxWidth = new Vector2((entity.originScreenPosition.Y - entity.absScreenPosition.Y) / 2, 0f); // divide height by 2 to simulate width
                 Vector2 boxStart = Vector2.Subtract(entity.absScreenPosition, boxWidth); // get top left corner of box
                 Vector2 boxEnd = Vector2.Add(entity.originScreenPosition, boxWidth); // get bottom right corner of box
                 Vector2 boxCenter = new Vector2((boxStart.X + boxEnd.X) / 2, ((boxStart.Y + boxEnd.Y) / 2));
                 Vector2 boxTopCenter = new Vector2(boxCenter.X, boxStart.Y);
                 Vector2 boxUpperUpperCenter = new Vector2((boxStart.X + boxEnd.X) / 2, boxStart.Y + (boxEnd.Y - boxStart.Y) / 8);
+                Vector2 BoxLeftBottom = new Vector2(boxStart.X, boxEnd.Y);
 
                 // Calculate health bar stuff
 
                 float barPercentage = entity.health / 100f; // calculate percentage of health
                 Vector2 healthBarHeight = new Vector2(0, barPercentage * (entity.originScreenPosition.Y - entity.absScreenPosition.Y)); // calculate height of health bar by multiplying percentage by height of character
                 Vector2 healthBarStart = Vector2.Subtract(Vector2.Subtract(entity.originScreenPosition, boxWidth), healthBarHeight); // get position next to the box using box width
-                Vector2 heathBarEnd = Vector2.Subtract(entity.originScreenPosition, Vector2.Add(boxWidth, new Vector2(-4, 0))); // get bottom right end of the bar. The -4 is width of the bar.
+                Vector2 heathBarEnd = Vector2.Subtract(entity.originScreenPosition, boxWidth); // get bottom left end of the bar.
 
                 // Finally draw
                 
@@ -209,11 +212,11 @@ namespace CS2EXTERNAL
                 }
                 if (dot)
                 {
-                    drawList.AddCircleFilled(boxUpperUpperCenter, 1, uintColor); // draw dot on entities
+                    drawList.AddCircleFilled(boxUpperUpperCenter, 2, uintColor); // draw dot on entities
                 }
                 if (healthBar)
                 {
-                    drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 2); // draw health bar
+                    drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 1); // draw health bar
                 }
                 if (healthBarText)
                 {
@@ -328,6 +331,7 @@ namespace CS2EXTERNAL
                 style.Colors[(int)ImGuiCol.CheckMark] = new Vector4(255, 255, 255, 0.5f);
                 style.Colors[(int)ImGuiCol.SliderGrab] = new Vector4(255, 255, 255, 0.5f);
                 style.Colors[(int)ImGuiCol.SliderGrabActive] = new Vector4(255, 255, 255, 0.5f);
+                style.Colors[(int)ImGuiCol.Separator] = new Vector4(255, 255, 255, 0.5f);
                 // Tabs
                 style.Colors[(int)ImGuiCol.Tab] = new Vector4(0, 0, 0, 1f);
                 style.Colors[(int)ImGuiCol.TabActive] = new Vector4(0, 255, 0, 1f);
@@ -355,7 +359,7 @@ namespace CS2EXTERNAL
                         ImGui.Checkbox("Enable Team Health Bar Text", ref enableTeamHealthBarText);
                         ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
-                        ImGui.Checkbox("Enable Box Fill", ref enableTeamBoxFill);
+                        ImGui.Checkbox("Enable Team Box Fill", ref enableTeamBoxFill);
                         ShowContextMenuTooltip("Fills the box with a solid color");
 
                         ImGui.Separator();
@@ -365,10 +369,10 @@ namespace CS2EXTERNAL
                         ImGui.Checkbox("Enable Enemy Box", ref enableEnemyBox);
                         ImGui.Checkbox("Enable Enemy Dot", ref enableEnemyDot);
                         ImGui.Checkbox("Enable Enemy Health Bar", ref enableEnemyHealthBar);
-                        ImGui.Checkbox("Enable Enemy Health Bar Text", ref enableTeamHealthBarText);
+                        ImGui.Checkbox("Enable Enemy Health Bar Text", ref enableEnemyHealthBarText);
                         ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
-                        ImGui.Checkbox("Enable Box Fill", ref enableEnemyBoxFill);
+                        ImGui.Checkbox("Enable Enemy Box Fill", ref enableEnemyBoxFill);
                         ShowContextMenuTooltip("Fills the box with a solid color");
 
                         ImGui.EndTabItem();
@@ -395,7 +399,7 @@ namespace CS2EXTERNAL
                         ImGui.Separator();
 
                         ImGui.Text("Line Fill Color");
-                        ImGui.ColorPicker4("Box Fill color", ref lineColor);
+                        ImGui.ColorPicker4("Line Fill color", ref lineColor);
 
                         ImGui.EndTabItem();
 
@@ -440,6 +444,9 @@ namespace CS2EXTERNAL
                     {
                         ImGui.Text($"Grounded?: {localPlayer.m_bOnGroundLastTick}");
                         ImGui.Text($"m_iIDEntIndex: {localPlayer.m_iIDEntIndex}");
+                        ImGui.Text($"gameRules: {localPlayer.dwGameRules}");
+                        ImGui.Text($"GameTime: {gameTime}");
+                        ImGui.Text($"BombTimer: {isBombPlanted}");
                         ImGui.EndTabItem();
                     }
 
@@ -593,11 +600,15 @@ namespace CS2EXTERNAL
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
             entity.m_bOnGroundLastTick = swed.ReadBool(entity.address, offsets.m_bOnGroundLastTick);
+
+            IntPtr globalVars = swed.ReadPointer(client, offsets.dwGlobalVars); // get the global vars address
+            gameTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time
+            isBombPlanted = swed.ReadBool(client, offsets.m_flC4Blow - 8); // check if c4 is planted
         }
 
         static void Main(string[] args)
         {
-            //AuthHelper.Init();
+            AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();

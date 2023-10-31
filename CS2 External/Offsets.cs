@@ -18,6 +18,8 @@ namespace CS2_External_Cheat
         public int dwGameRules = 0x17F5488;
         public int dwPlantedC4 = 0x188BFE0;
         public int m_bOnGroundLastTick = 0x2290;
+        public int dwGlobalVars = 0x169AFE0;
+        public int current_time = 0x2C;
 
         // entity attributes
         public int teamNum = 0x3BF;
