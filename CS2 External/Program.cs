@@ -603,7 +603,7 @@ namespace CS2EXTERNAL
 
             IntPtr globalVars = swed.ReadPointer(client, offsets.dwGlobalVars); // get the global vars address
             gameTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time
-            isBombPlanted = swed.ReadBool(client, offsets.m_flC4Blow - 8); // check if c4 is planted
+            isBombPlanted = swed.ReadBool(client, offsets.dwPlantedC4 - 8); // check if c4 is planted
         }
 
         static void Main(string[] args)
