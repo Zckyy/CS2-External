@@ -4,7 +4,9 @@ using Swed64;
 using System.Numerics;
 using ImGuiNET;
 using System.Runtime.InteropServices;
+using System.Timers;
 using CS2_External;
+using Timer = System.Timers.Timer;
 
 namespace CS2EXTERNAL
 {
@@ -53,7 +55,11 @@ namespace CS2EXTERNAL
 
         IntPtr client;
         float gameTime;
+        float globalTime;
         bool isBombPlanted;
+        float C4Timer;
+        Vector2 C4Origin;
+        Vector2 bombPosition;
 
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
@@ -192,6 +198,8 @@ namespace CS2EXTERNAL
                 Vector2 boxUpperUpperCenter = new Vector2((boxStart.X + boxEnd.X) / 2, boxStart.Y + (boxEnd.Y - boxStart.Y) / 8);
                 Vector2 BoxLeftBottom = new Vector2(boxStart.X, boxEnd.Y);
 
+                Vector2 c4BoxStart = Vector2.Subtract(bombPosition, boxWidth); // get top left corner of box
+
                 // Calculate health bar stuff
 
                 float barPercentage = entity.health / 100f; // calculate percentage of health
@@ -209,6 +217,7 @@ namespace CS2EXTERNAL
                 if (box)
                 {
                     drawList.AddRect(boxStart, boxEnd, uintColor, 1); // draw box around entities
+                    drawList.AddRect(c4BoxStart, (c4BoxStart + new Vector2(5, 5)), 1);
                 }
                 if (dot)
                 {
@@ -226,7 +235,12 @@ namespace CS2EXTERNAL
                 {
                     drawList.AddRectFilled(boxStart, boxEnd, uintBoxFill); // fill the box with solid color
                 }
+                if (isBombPlanted)
+                {
+                    drawList.AddText((windowCenter + new Vector2(20, -50)), 0, $"Bomb planted!"); // draw health text
+                }
             }
+
 
         }
 
@@ -442,11 +456,13 @@ namespace CS2EXTERNAL
 
                     if (ImGui.BeginTabItem("Debug"))
                     {
-                        ImGui.Text($"Grounded?: {localPlayer.m_bOnGroundLastTick}");
+                        ImGui.Text($"Grounded: {localPlayer.m_bOnGroundLastTick}");
                         ImGui.Text($"m_iIDEntIndex: {localPlayer.m_iIDEntIndex}");
                         ImGui.Text($"gameRules: {localPlayer.dwGameRules}");
-                        ImGui.Text($"GameTime: {gameTime}");
-                        ImGui.Text($"BombTimer: {isBombPlanted}");
+                        ImGui.Text($"GlobalTime: {globalTime}");
+                        ImGui.Text($"IsBombPlanted: {isBombPlanted}");
+                        ImGui.Text($"C4 Time: {C4Timer}");
+                        ImGui.Text($"Bomb Position: {C4Origin}");
                         ImGui.EndTabItem();
                     }
 
@@ -602,13 +618,16 @@ namespace CS2EXTERNAL
             entity.m_bOnGroundLastTick = swed.ReadBool(entity.address, offsets.m_bOnGroundLastTick);
 
             IntPtr globalVars = swed.ReadPointer(client, offsets.dwGlobalVars); // get the global vars address
-            gameTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time
+            globalTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time
             isBombPlanted = swed.ReadBool(client, offsets.dwPlantedC4 - 8); // check if c4 is planted
+
+            // C4 Stuff
+            IntPtr planted_c4 = swed.ReadPointer(client, offsets.dwPlantedC4); // get the planted c4 address
         }
 
         static void Main(string[] args)
         {
-            AuthHelper.Init();
+            //AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();
