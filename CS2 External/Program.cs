@@ -59,10 +59,12 @@ namespace CS2EXTERNAL
 
         // ImGui stuff
 
-        Vector4 teamcolor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
-        Vector4 enemycolor = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
+        Vector4 teamBoxColor = new Vector4(0, 0, 1, 1); // RGBA, Blue teammates
+        Vector4 lineColor = new Vector4(1, 1, 1, 1);
+        Vector4 enemyBoxColor = new Vector4(1, 0, 0, 1); // RGBA, Red enemies
         Vector4 healthBarcolor = new Vector4(0, 1, 0, 1); // RGBA, Green healthbar
         Vector4 healthBarTextcolor = new Vector4(0, 0, 0, 1); // RGBA, black text
+        Vector4 boixFillColor = new Vector4(0, 0, 0, (float)0.20); // RGBA, black box fill
 
         // Screen variables, we update these later
 
@@ -80,16 +82,18 @@ namespace CS2EXTERNAL
         bool enableESP = true;
 
         bool enableTeamLine = false;
-        bool enableTeamBox = true;
-        bool enableTeamDot = true;
-        bool enableTeamHealthBar = true;
-        bool enableTeamHealthBarText = true;
+        bool enableTeamBox = false;
+        bool enableTeamDot = false;
+        bool enableTeamHealthBar = false;
+        bool enableTeamHealthBarText = false;
+        bool enableTeamBoxFill = true;
 
-        bool enableEnemyLine = false;
+        bool enableEnemyLine = true;
         bool enableEnemyBox = true;
         bool enableEnemyDot = true;
         bool enableEnemyHealthBar = true;
         bool enableEnemyHealthBarText = true;
+        bool enableEnemyBoxFill = true;
 
         bool isTriggerEnabled = true;
 
@@ -146,11 +150,11 @@ namespace CS2EXTERNAL
                             {
                                 if (entity.teamNum == localPlayer.teamNum)
                                 {
-                                    DrawVisuals(entity, teamcolor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamHealthBarText);
+                                    DrawVisuals(entity, teamBoxColor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamHealthBarText, boixFillColor, enableTeamBoxFill);
                                 }
                                 else
                                 {
-                                    DrawVisuals(entity, enemycolor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyHealthBarText);
+                                    DrawVisuals(entity, enemyBoxColor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyHealthBarText, boixFillColor, enableEnemyBoxFill);
                                 }
                             }
                         }
@@ -163,7 +167,7 @@ namespace CS2EXTERNAL
             }
         }
 
-        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool healthBarText)
+        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool healthBarText, Vector4 boxFillColour, bool boxFill)
         {
             // check if 2d position is valid
             if (IsPixelInsideScreen(entity.originScreenPosition))
@@ -173,6 +177,7 @@ namespace CS2EXTERNAL
                 uint uintColor = ImGui.ColorConvertFloat4ToU32(color);
                 uint uiintHealthTextColor = ImGui.ColorConvertFloat4ToU32(healthBarTextcolor);
                 uint uintHealthBarColor = ImGui.ColorConvertFloat4ToU32(healthBarcolor);
+                uint uintBoxFill = ImGui.ColorConvertFloat4ToU32(boxFillColour);
 
                 // Calculate box attributes
 
@@ -180,6 +185,7 @@ namespace CS2EXTERNAL
                 Vector2 boxStart = Vector2.Subtract(entity.absScreenPosition, boxWidth); // get top left corner of box
                 Vector2 boxEnd = Vector2.Add(entity.originScreenPosition, boxWidth); // get bottom right corner of box
                 Vector2 boxCenter = new Vector2((boxStart.X + boxEnd.X) / 2, ((boxStart.Y + boxEnd.Y) / 2));
+                Vector2 boxTopCenter = new Vector2(boxCenter.X, boxStart.Y);
                 Vector2 boxUpperUpperCenter = new Vector2((boxStart.X + boxEnd.X) / 2, boxStart.Y + (boxEnd.Y - boxStart.Y) / 8);
 
                 // Calculate health bar stuff
@@ -193,7 +199,7 @@ namespace CS2EXTERNAL
                 
                 if (line)
                 {
-                    drawList.AddLine(lineOrigin, entity.originScreenPosition, uintColor, 3); // draw line to feet of entities
+                    drawList.AddLine(lineOrigin, boxTopCenter, uintColor, 1); // draw line to feet of entities
 
                 }   
                 if (box)
@@ -211,6 +217,10 @@ namespace CS2EXTERNAL
                 if (healthBarText)
                 {
                     drawList.AddText(entity.originScreenPosition, uiintHealthTextColor, $"HP: {entity.health}"); // draw health text
+                }
+                if (boxFill)
+                {
+                    drawList.AddRectFilled(boxStart, boxEnd, uintBoxFill); // fill the box with solid color
                 }
             }
 
@@ -344,6 +354,9 @@ namespace CS2EXTERNAL
                         ImGui.Checkbox("Enable Team Health Bar Text", ref enableTeamHealthBarText);
                         ImGui.Checkbox("Enable Team Line", ref enableTeamLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
+                        ImGui.Checkbox("Enable Box Fill", ref enableTeamBoxFill);
+                        ShowContextMenuTooltip("Fills the box with a solid color");
+
                         ImGui.Separator();
 
                         ImGui.Text("Enemy");
@@ -354,6 +367,8 @@ namespace CS2EXTERNAL
                         ImGui.Checkbox("Enable Enemy Health Bar Text", ref enableTeamHealthBarText);
                         ImGui.Checkbox("Enable Enemy Line", ref enableEnemyLine);
                         ShowContextMenuTooltip("Toggles Snaplines, these lines start from the bottom center of the game window");
+                        ImGui.Checkbox("Enable Box Fill", ref enableEnemyBoxFill);
+                        ShowContextMenuTooltip("Fills the box with a solid color");
 
                         ImGui.EndTabItem();
                     }
@@ -364,13 +379,17 @@ namespace CS2EXTERNAL
                         // team colors
                         ImGui.Text("Team");
 
-                        ImGui.ColorPicker4("Team color", ref teamcolor);
+                        ImGui.ColorPicker4("Team color", ref teamBoxColor);
                         ImGui.Separator();
 
                         // enemy colors
                         ImGui.Text("Enemy");
 
-                        ImGui.ColorPicker4("Enemy color", ref enemycolor);
+                        ImGui.ColorPicker4("Enemy color", ref enemyBoxColor);
+                        ImGui.Separator();
+
+                        ImGui.Text("Box Fill Color");
+                        ImGui.ColorPicker4("Box Fill color", ref boixFillColor);
 
                         ImGui.EndTabItem();
 
@@ -472,7 +491,7 @@ namespace CS2EXTERNAL
             var window = GetWindowRect(swed.GetProcess().MainWindowHandle);
             windowLocation = new Vector2(window.left, window.top);
             windowSize = new Vector2(window.right - window.left, window.bottom - window.top);
-            lineOrigin = new Vector2(windowLocation.X + windowSize.X / 2, window.bottom);
+            lineOrigin = new Vector2(windowLocation.X + windowSize.X / 2, window.top); // TOP CENTER OF SCREEN
             windowCenter = new Vector2(lineOrigin.X, window.bottom - windowSize.Y / 2);
 
             client = swed.GetModuleBase("client.dll");
@@ -572,7 +591,7 @@ namespace CS2EXTERNAL
 
         static void Main(string[] args)
         {
-            AuthHelper.Init();
+            //AuthHelper.Init();
 
             Program program = new Program();
             program.Start().Wait();
