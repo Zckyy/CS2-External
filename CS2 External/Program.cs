@@ -150,11 +150,11 @@ namespace CS2EXTERNAL
                             {
                                 if (entity.teamNum == localPlayer.teamNum)
                                 {
-                                    DrawVisuals(entity, teamBoxColor, enableTeamLine, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamHealthBarText, boixFillColor, enableTeamBoxFill);
+                                    DrawVisuals(entity, teamBoxColor, enableTeamLine, lineColor, enableTeamBox, enableTeamDot, enableTeamHealthBar, enableTeamHealthBarText, boixFillColor, enableTeamBoxFill);
                                 }
                                 else
                                 {
-                                    DrawVisuals(entity, enemyBoxColor, enableEnemyLine, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyHealthBarText, boixFillColor, enableEnemyBoxFill);
+                                    DrawVisuals(entity, enemyBoxColor, enableEnemyLine, lineColor, enableEnemyBox, enableEnemyDot, enableEnemyHealthBar, enableEnemyHealthBarText, boixFillColor, enableEnemyBoxFill);
                                 }
                             }
                         }
@@ -167,7 +167,7 @@ namespace CS2EXTERNAL
             }
         }
 
-        void DrawVisuals(Entity entity, Vector4 color, bool line, bool box, bool dot, bool healthBar, bool healthBarText, Vector4 boxFillColour, bool boxFill)
+        void DrawVisuals(Entity entity, Vector4 color, bool line, Vector4 lineColor, bool box, bool dot, bool healthBar, bool healthBarText, Vector4 boxFillColour, bool boxFill)
         {
             // check if 2d position is valid
             if (IsPixelInsideScreen(entity.originScreenPosition))
@@ -177,6 +177,7 @@ namespace CS2EXTERNAL
                 uint uintColor = ImGui.ColorConvertFloat4ToU32(color);
                 uint uiintHealthTextColor = ImGui.ColorConvertFloat4ToU32(healthBarTextcolor);
                 uint uintHealthBarColor = ImGui.ColorConvertFloat4ToU32(healthBarcolor);
+                uint uintLineColor = ImGui.ColorConvertFloat4ToU32(lineColor);
                 uint uintBoxFill = ImGui.ColorConvertFloat4ToU32(boxFillColour);
 
                 // Calculate box attributes
@@ -199,20 +200,20 @@ namespace CS2EXTERNAL
                 
                 if (line)
                 {
-                    drawList.AddLine(lineOrigin, boxTopCenter, uintColor, 1); // draw line to feet of entities
+                    drawList.AddLine(lineOrigin, boxTopCenter, uintLineColor, 1); // draw line to feet of entities
 
                 }   
                 if (box)
                 {
-                    drawList.AddRect(boxStart, boxEnd, uintColor, 3); // draw box around entities
+                    drawList.AddRect(boxStart, boxEnd, uintColor, 1); // draw box around entities
                 }
                 if (dot)
                 {
-                    drawList.AddCircleFilled(boxUpperUpperCenter, 3, uintColor); // draw dot on entities
+                    drawList.AddCircleFilled(boxUpperUpperCenter, 1, uintColor); // draw dot on entities
                 }
                 if (healthBar)
                 {
-                    drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 3); // draw health bar
+                    drawList.AddRectFilled(healthBarStart, heathBarEnd, uintHealthBarColor, 2); // draw health bar
                 }
                 if (healthBarText)
                 {
@@ -377,9 +378,9 @@ namespace CS2EXTERNAL
                     {
 
                         // team colors
-                        ImGui.Text("Team");
+                        ImGui.Text("Team Box Color");
 
-                        ImGui.ColorPicker4("Team color", ref teamBoxColor);
+                        ImGui.ColorPicker4("Team color Color", ref teamBoxColor);
                         ImGui.Separator();
 
                         // enemy colors
@@ -390,6 +391,11 @@ namespace CS2EXTERNAL
 
                         ImGui.Text("Box Fill Color");
                         ImGui.ColorPicker4("Box Fill color", ref boixFillColor);
+
+                        ImGui.Separator();
+
+                        ImGui.Text("Line Fill Color");
+                        ImGui.ColorPicker4("Box Fill color", ref lineColor);
 
                         ImGui.EndTabItem();
 
