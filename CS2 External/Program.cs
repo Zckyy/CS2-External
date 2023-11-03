@@ -58,8 +58,6 @@ namespace CS2EXTERNAL
         float globalTime;
         bool isBombPlanted;
         float C4Timer;
-        Vector2 C4Origin;
-        Vector2 bombPosition;
 
         const int MENU_HOTKEY = 0x70; // F1 Hotkey
         const int PANIC_KEY = 0x73; // F4 Hotkey
@@ -104,12 +102,19 @@ namespace CS2EXTERNAL
         bool enableEnemyBoxFill = false;
 
         bool isTriggerEnabled = true;
+        bool isNoFlashEnabled = false;
 
         //Hotkey assign in menu
         static string inputText = "";
         static bool isButtonPress = false;
         static bool captureInput = false;
         static int captureKey = -1;
+
+        void removeFlash()
+        {
+            // Write flash duration to 0 in memory
+            swed.WriteFloat(localPlayer.address + offsets.m_flFlashDuration, 0);
+        }
 
         bool IsAimingAtEnemy()
         {
@@ -197,9 +202,6 @@ namespace CS2EXTERNAL
                 Vector2 boxTopCenter = new Vector2(boxCenter.X, boxStart.Y);
                 Vector2 boxUpperUpperCenter = new Vector2((boxStart.X + boxEnd.X) / 2, boxStart.Y + (boxEnd.Y - boxStart.Y) / 8);
                 Vector2 BoxLeftBottom = new Vector2(boxStart.X, boxEnd.Y);
-
-                Vector2 c4BoxStart = Vector2.Subtract(bombPosition, boxWidth); // get top left corner of box
-
                 // Calculate health bar stuff
 
                 float barPercentage = entity.health / 100f; // calculate percentage of health
@@ -217,7 +219,6 @@ namespace CS2EXTERNAL
                 if (box)
                 {
                     drawList.AddRect(boxStart, boxEnd, uintColor, 1); // draw box around entities
-                    drawList.AddRect(c4BoxStart, (c4BoxStart + new Vector2(5, 5)), 1);
                 }
                 if (dot)
                 {
@@ -454,15 +455,23 @@ namespace CS2EXTERNAL
                         }
                     }
 
+                    if (ImGui.BeginTabItem("Misc"))
+                    {
+                        ImGui.Checkbox($"No flash (Unsafe)", ref isNoFlashEnabled);
+
+                        ImGui.EndTabItem();
+                    }
+
                     if (ImGui.BeginTabItem("Debug"))
                     {
                         ImGui.Text($"Grounded: {localPlayer.m_bOnGroundLastTick}");
+                        ImGui.Text($"Flash Duration: {localPlayer.m_flFlashDuration}");
                         ImGui.Text($"m_iIDEntIndex: {localPlayer.m_iIDEntIndex}");
                         ImGui.Text($"gameRules: {localPlayer.dwGameRules}");
                         ImGui.Text($"GlobalTime: {globalTime}");
                         ImGui.Text($"IsBombPlanted: {isBombPlanted}");
                         ImGui.Text($"C4 Time: {C4Timer}");
-                        ImGui.Text($"Bomb Position: {C4Origin}");
+
                         ImGui.EndTabItem();
                     }
 
@@ -533,6 +542,11 @@ namespace CS2EXTERNAL
                 if (isTriggerEnabled)
                 {
                     IsAimingAtEnemy();
+                }
+
+                if (isNoFlashEnabled && localPlayer.m_flFlashDuration > 0)
+                {
+                    removeFlash();
                 }
 
                 if (killswitch == true || GetAsyncKeyState(PANIC_KEY) > 0)
@@ -616,6 +630,7 @@ namespace CS2EXTERNAL
             entity.origin = swed.ReadVec(entity.address, offsets.origin);
             entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
             entity.m_bOnGroundLastTick = swed.ReadBool(entity.address, offsets.m_bOnGroundLastTick);
+            entity.m_flFlashDuration = swed.ReadFloat(entity.address, offsets.m_flFlashDuration);
 
             IntPtr globalVars = swed.ReadPointer(client, offsets.dwGlobalVars); // get the global vars address
             globalTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time

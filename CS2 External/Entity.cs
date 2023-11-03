@@ -17,6 +17,7 @@ namespace CS2_External_Cheat
         public int jumpFlag { get; set; }
         public int m_iIDEntIndex { get; set; }
         public int dwGameRules { get; set; }
+        public float m_flFlashDuration { get; set; }
         public Vector3 origin { get; set; }
         public Vector3 abs { get; set; }
         public Vector3 viewOffset { get; set; }
