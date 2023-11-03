@@ -464,6 +464,17 @@ namespace CS2EXTERNAL
 
                     if (ImGui.BeginTabItem("Debug"))
                     {
+                        ImGui.Text($"LocalPlayer: {localPlayer.address}");
+                        ImGui.Text($"LocalPlayerTeam: {localPlayer.teamNum}");
+                        ImGui.Text($"LocalPlayerHealth: {localPlayer.health}");
+                        ImGui.Text($"LocalPlayerJumpFlag: {localPlayer.jumpFlag}");
+                        ImGui.Text($"LocalPlayerOrigin: {localPlayer.origin}");
+                        ImGui.Text($"LocalPlayerAbs: {localPlayer.abs}");
+                        ImGui.Text($"LocalPlayerViewOffset: {localPlayer.viewOffset}");
+                        ImGui.Text($"LocalPlayerOriginScreenPosition: {localPlayer.originScreenPosition}");
+                        ImGui.Text($"LocalPlayerAbsScreenPosition: {localPlayer.absScreenPosition}");
+                        ImGui.Text($"LocalPlayerName: {localPlayer.m_iszPlayerName}");
+
                         ImGui.Text($"Grounded: {localPlayer.m_bOnGroundLastTick}");
                         ImGui.Text($"Flash Duration: {localPlayer.m_flFlashDuration}");
                         ImGui.Text($"m_iIDEntIndex: {localPlayer.m_iIDEntIndex}");
@@ -631,6 +642,7 @@ namespace CS2EXTERNAL
             entity.m_iIDEntIndex = swed.ReadInt(entity.address, offsets.m_iIDEntIndex);
             entity.m_bOnGroundLastTick = swed.ReadBool(entity.address, offsets.m_bOnGroundLastTick);
             entity.m_flFlashDuration = swed.ReadFloat(entity.address, offsets.m_flFlashDuration);
+            entity.m_iszPlayerName = swed.ReadString(entity.address, offsets.m_iszPlayerName);
 
             IntPtr globalVars = swed.ReadPointer(client, offsets.dwGlobalVars); // get the global vars address
             globalTime = swed.ReadFloat(globalVars, offsets.current_time); // get the current game time
